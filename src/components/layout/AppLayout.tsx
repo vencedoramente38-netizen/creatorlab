@@ -116,29 +116,27 @@ export function AppLayout() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-white overflow-hidden">
-      <div className="relative z-10 flex min-h-screen w-full">
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onOpenChange={setIsSidebarOpen}
-          isCollapsed={isSidebarCollapsed}
-          onCollapsedChange={setIsSidebarCollapsed}
-        />
+    <div className="relative min-h-screen bg-background text-white flex">
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onOpenChange={setIsSidebarOpen}
+        isCollapsed={isSidebarCollapsed}
+        onCollapsedChange={setIsSidebarCollapsed}
+      />
+      
+      <main className="relative flex-1 bg-transparent flex flex-col min-w-0">
+        {/* Rain effect - only on main content */}
+        <div className="rain-container absolute inset-0 pointer-events-none z-0 overflow-hidden" />
         
-        <main className="relative flex-1 bg-transparent flex flex-col overflow-hidden">
-          {/* Rain effect - only on main content */}
-          <div className="rain-container" />
-          
-          <div className="relative z-10 flex flex-1 flex-col">
-            <Topbar />
-            <div className="flex-1 overflow-auto p-4 md:p-6">
-              <div className="mx-auto max-w-6xl w-full space-y-6">
-                <Outlet />
-              </div>
+        <div className="relative z-10 flex flex-col flex-1">
+          <Topbar />
+          <div className="p-4 md:p-6 pb-24">
+            <div className="mx-auto max-w-6xl w-full space-y-6">
+              <Outlet />
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
 
       {/* Mobile floating button */}
       <button

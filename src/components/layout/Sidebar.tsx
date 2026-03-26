@@ -38,7 +38,7 @@ export function Sidebar({ isOpen, onOpenChange, isCollapsed, onCollapsedChange }
 
   const sidebarContent = (collapsed: boolean) => (
     <aside className={cn(
-      "relative flex h-screen flex-col bg-background text-white transition-all duration-300",
+      "sticky top-0 flex h-screen z-40 shrink-0 flex-col bg-background text-white transition-all duration-300",
       collapsed ? "w-16" : "w-60"
     )}>
       {/* Circular collapse toggle - desktop only */}
