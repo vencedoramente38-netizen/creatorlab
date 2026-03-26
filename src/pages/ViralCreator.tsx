@@ -227,7 +227,7 @@ Responda APENAS em JSON válido sem markdown e sem blocos de código formatados 
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-white/10 rounded-full z-0" />
             <div 
               className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-[#25F4EE] to-[#FE2C55] rounded-full z-0 transition-all duration-500 ease-in-out" 
-              style={{ width: \`${((step - 1) / 3) * 100}%\` }} 
+              style={{ width: ((step - 1) / 3) * 100 + '%' }} 
             />
             
             {[1, 2, 3, 4].map((s) => (
