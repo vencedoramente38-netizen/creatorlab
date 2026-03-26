@@ -2,8 +2,13 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// Provide dummy fallbacks so the app doesn't crash on boot if env vars are missing
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://dummy.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'dummy_key';
+
+if (!import.meta.env.VITE_SUPABASE_URL) {
+  console.error("VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are missing. Supabase integration will fail.");
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

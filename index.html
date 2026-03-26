@@ -31,5 +31,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.onerror = function(msg, src, line, col, error) {
+        document.body.style.background = '#1a1a1a';
+        document.body.style.color = 'white';
+        document.body.style.padding = '20px';
+        document.body.style.fontFamily = 'monospace';
+        document.body.innerHTML = '<h2>ERRO DETECTADO:</h2><p>' + msg + '</p><p>Arquivo: ' + src + '</p><p>Linha: ' + line + '</p>';
+      };
+    </script>
   </body>
 </html>
