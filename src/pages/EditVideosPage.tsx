@@ -184,7 +184,7 @@ export default function EditVideosPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-xl font-bold text-white">Sync Editor</h2>
+        <h2 className="text-xl font-bold text-white">Creator Editor</h2>
         <p className="text-sm text-muted-foreground">
           Editor de video com efeitos neon TikTok
         </p>

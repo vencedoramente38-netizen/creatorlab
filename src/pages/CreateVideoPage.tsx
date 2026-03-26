@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 // ── Config types ──
-interface SyncLabConfig {
+interface CreatorLabConfig {
   productId: number | null;
   cenario: string;
   cenarioCustom: string;
@@ -33,7 +33,7 @@ interface SyncLabConfig {
   falaAvatar: string;
 }
 
-const initial: SyncLabConfig = {
+const initial: CreatorLabConfig = {
   productId: null,
   cenario: "",
   cenarioCustom: "",
@@ -99,7 +99,7 @@ const parts = ["Seleção", "Configuração", "Fala", "Revisão"];
 
 // ── Main Component ──
 export default function CreateVideoPage() {
-  const [config, setConfig] = useState<SyncLabConfig>(initial);
+  const [config, setConfig] = useState<CreatorLabConfig>(initial);
   const [currentPart, setCurrentPart] = useState(0);
   const [generatedPrompt, setGeneratedPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -119,7 +119,7 @@ export default function CreateVideoPage() {
     ? { id: -1, name: "Seu avatar", imageUrl: config.customAvatarUrl }
     : defaultAvatars.find(a => a.id === config.avatarId) || null;
 
-  const set = useCallback(<K extends keyof SyncLabConfig>(key: K, value: SyncLabConfig[K]) => {
+  const set = useCallback(<K extends keyof CreatorLabConfig>(key: K, value: CreatorLabConfig[K]) => {
     setConfig(prev => ({ ...prev, [key]: value }));
   }, []);
 
@@ -321,7 +321,7 @@ OUTPUT FINAL: Entregue o roteiro completo e estruturado acima, pronto para ser c
     const prompt = generatePrompt();
     if (prompt) {
       setGeneratedPrompt(prompt);
-      addPrompt(`Sync Lab - ${selectedProduct?.nome || "Produto"}`, prompt, "Sync Lab");
+      addPrompt(`Creator Lab - ${selectedProduct?.nome || "Produto"}`, prompt, "Creator Lab");
     }
 
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -394,7 +394,7 @@ OUTPUT FINAL: Entregue o roteiro completo e estruturado acima, pronto para ser c
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-white">Sync Lab — Resultado</h2>
+            <h2 className="text-xl font-bold text-white">Creator Lab — Resultado</h2>
             <p className="text-sm text-muted-foreground">Prompt V03 gerado com sucesso</p>
           </div>
           <Button variant="outline" className="border-white/10" onClick={() => { setShowResult(false); setCurrentPart(0); setGeneratedPrompt(""); }}>
@@ -513,7 +513,7 @@ OUTPUT FINAL: Entregue o roteiro completo e estruturado acima, pronto para ser c
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-xl font-bold text-white">Sync Lab</h2>
+        <h2 className="text-xl font-bold text-white">Creator Lab</h2>
         <p className="text-sm text-muted-foreground">Wizard de criação de prompt para vídeo viral V03</p>
       </div>
 

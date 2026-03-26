@@ -20,8 +20,8 @@ import { cn } from "@/lib/utils";
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/produtos": "Radar de Produtos",
-  "/criar-video": "Sync Lab",
-  "/editar-videos": "Sync Editor",
+  "/criar-video": "Creator Lab",
+  "/editar-videos": "Creator Editor",
   "/meus-prompts": "Meus Prompts",
   "/tutorial": "Tutorial",
   "/configuracoes": "Configuracoes",
@@ -50,7 +50,7 @@ export function Topbar() {
     }
   }, []);
 
-  const currentTitle = pageTitles[location.pathname] || "TikTok Sync";
+  const currentTitle = pageTitles[location.pathname] || "Crator Lab";
   const displayName = profile.name || user?.email?.split("@")[0] || "Usuário";
   const displayEmail = profile.email || user?.email || "";
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -60,7 +60,7 @@ export function Topbar() {
       <div className="flex items-center gap-3">
         <img
           src="https://i.postimg.cc/FHmp3GT8/Gemini-Generated-Image-ib23j0ib23j0ib23.png"
-          alt="TikTok Sync"
+          alt="Crator Lab"
           className="h-7 w-7 rounded-lg object-cover md:hidden"
         />
         <h1 className="text-sm font-semibold text-white">{currentTitle}</h1>

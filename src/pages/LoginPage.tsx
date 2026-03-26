@@ -39,10 +39,10 @@ export default function LoginPage() {
         <div className="flex flex-col items-center gap-4">
           <img
             src="https://i.postimg.cc/FHmp3GT8/Gemini-Generated-Image-ib23j0ib23j0ib23.png"
-            alt="TikTok Sync"
+            alt="Crator Lab"
             className="h-16 w-16 rounded-2xl object-cover"
           />
-          <h1 className="text-2xl font-bold text-white">TikTok Sync</h1>
+          <h1 className="text-2xl font-bold text-white">Crator Lab</h1>
           <p className="text-sm text-muted-foreground">
             Entre para acessar o painel
           </p>

@@ -27,8 +27,8 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Package, label: "Radar de Produtos", path: "/produtos" },
   { icon: Zap, label: "Viral Creator", path: "/viral-creator" },
-  { icon: Video, label: "Sync Lab", path: "/criar-video" },
-  { icon: Film, label: "Sync Editor", path: "/editar-videos" },
+  { icon: Video, label: "Creator Lab", path: "/criar-video" },
+  { icon: Film, label: "Creator Editor", path: "/editar-videos" },
   { icon: FileText, label: "Meus Prompts", path: "/meus-prompts" },
   { icon: BookOpen, label: "Tutorial", path: "/tutorial" },
   { icon: Settings, label: "Configuracoes", path: "/configuracoes" },
@@ -57,10 +57,10 @@ export function Sidebar({ isOpen, onOpenChange, isCollapsed, onCollapsedChange }
       )}>
         <img
           src="https://i.postimg.cc/FHmp3GT8/Gemini-Generated-Image-ib23j0ib23j0ib23.png"
-          alt="TikTok Sync"
+          alt="Crator Lab"
           className="h-8 w-8 rounded-lg object-cover"
         />
-        {!collapsed && <span className="text-sm font-semibold">TikTok Sync</span>}
+        {!collapsed && <span className="text-sm font-semibold">Crator Lab</span>}
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">

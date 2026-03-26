@@ -99,7 +99,7 @@ export default function TutorialPage() {
       <div>
         <h2 className="text-xl font-bold text-white">Tutorial</h2>
         <p className="text-sm text-muted-foreground">
-          Aprenda a usar todas as funcionalidades do TikTok Sync
+          Aprenda a usar todas as funcionalidades do Crator Lab
         </p>
       </div>
 
