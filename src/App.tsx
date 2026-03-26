@@ -13,6 +13,7 @@ import MyPromptsPage from "@/pages/MyPromptsPage";
 import TutorialPage from "@/pages/TutorialPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/NotFound";
+import ViralCreator from "@/pages/ViralCreator";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/produtos" element={<ProductsPage />} />
+            <Route path="/viral-creator" element={<ViralCreator />} />
             <Route path="/criar-video" element={<CreateVideoPage />} />
             <Route path="/editar-videos" element={<EditVideosPage />} />
             <Route path="/meus-prompts" element={<MyPromptsPage />} />

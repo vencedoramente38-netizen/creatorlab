@@ -12,6 +12,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -25,6 +26,7 @@ interface SidebarProps {
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Package, label: "Radar de Produtos", path: "/produtos" },
+  { icon: Zap, label: "Viral Creator", path: "/viral-creator" },
   { icon: Video, label: "Sync Lab", path: "/criar-video" },
   { icon: Film, label: "Sync Editor", path: "/editar-videos" },
   { icon: FileText, label: "Meus Prompts", path: "/meus-prompts" },
