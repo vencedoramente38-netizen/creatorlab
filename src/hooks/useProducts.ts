@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { defaultProducts, Product } from "@/data/products";
+import { supabase } from "@/integrations/supabase/client";
 
 const PRODUCTS_KEY = "tiktokSyncProducts";
 const FAVORITES_KEY = "favoriteProductIds";
@@ -20,14 +21,30 @@ export function useProducts() {
       setProducts(defaultProducts);
     }
 
-    const savedFavorites = localStorage.getItem(FAVORITES_KEY);
-    if (savedFavorites) {
+    const loadFavorites = async () => {
       try {
-        setFavorites(JSON.parse(savedFavorites));
-      } catch {
-        setFavorites([]);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data } = await supabase.from('favorites').select('product_id').eq('user_id', session.user.id);
+          if (data) {
+            setFavorites(data.map(f => parseInt(f.product_id, 10)));
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Error loading favorites from Supabase", e);
       }
-    }
+      
+      const savedFavorites = localStorage.getItem(FAVORITES_KEY);
+      if (savedFavorites) {
+        try {
+          setFavorites(JSON.parse(savedFavorites));
+        } catch {
+          setFavorites([]);
+        }
+      }
+    };
+    loadFavorites();
   }, []);
 
   useEffect(() => {
@@ -40,13 +57,35 @@ export function useProducts() {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
   }, [favorites]);
 
-  const toggleFavorite = useCallback((productId: number) => {
-    setFavorites(prev =>
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
-  }, []);
+  const toggleFavorite = useCallback(async (productId: number) => {
+    const isFav = favorites.includes(productId);
+    const newFavs = isFav ? favorites.filter(id => id !== productId) : [...favorites, productId];
+    setFavorites(newFavs);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
+      if (isFav) {
+        await supabase.from("favorites")
+          .delete()
+          .eq("product_id", productId.toString())
+          .eq("user_id", session.user.id);
+      } else {
+        const productData = products.find(p => p.id === productId);
+        if (productData) {
+          await supabase.from("favorites")
+            .upsert({
+              user_id: session.user.id,
+              product_id: productId.toString(),
+              product_data: productData as any
+            }, { onConflict: "user_id,product_id" });
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao salvar favorito:", error);
+    }
+  }, [favorites, products]);
 
   const isFavorite = useCallback((productId: number) => {
     return favorites.includes(productId);

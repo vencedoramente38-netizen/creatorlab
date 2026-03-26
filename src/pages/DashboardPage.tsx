@@ -16,6 +16,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useProducts } from "@/hooks/useProducts";
+import { Product } from "@/data/products";
 
 interface DashboardMetrics {
   faturamento: number;
@@ -60,6 +62,9 @@ const alertas = [
 ];
 
 export default function DashboardPage() {
+  const { getFavoriteProducts } = useProducts();
+  const favoriteProducts = getFavoriteProducts();
+  
   const [metrics, setMetrics] = useState<DashboardMetrics>(defaultMetrics);
   const [salesEvolution, setSalesEvolution] = useState<SalesEvolution[]>(defaultSalesEvolution);
 
@@ -119,6 +124,43 @@ export default function DashboardPage() {
           Acompanhe faturamento e comissoes do seu ecossistema TikTok Shop.
         </p>
       </div>
+
+      {/* Favorites Section */}
+      {favoriteProducts.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-lg font-bold text-white">Produtos Favoritos</h3>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {favoriteProducts.map((product) => (
+              <div
+                key={product.id}
+                className="flex-shrink-0 w-64 rounded-2xl border border-white/10 bg-card overflow-hidden transition-colors hover:border-primary/50"
+              >
+                <div className="aspect-video w-full overflow-hidden">
+                  <img
+                    src={product.imageUrl}
+                    alt={product.nome}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="p-4 space-y-2">
+                  <p className="text-xs text-primary font-medium">{product.categoria}</p>
+                  <p className="text-sm font-bold text-white line-clamp-1">{product.nome}</p>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-white font-semibold">
+                      {product.precoTexto || `R$ ${product.preco.toFixed(2)}`}
+                    </span>
+                    <span className="text-emerald-400 font-medium">
+                      {product.comissao}% comissão
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Metric cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

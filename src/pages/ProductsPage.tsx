@@ -104,36 +104,6 @@ export default function ProductsPage() {
         />
       </div>
 
-      {/* Favorites carousel */}
-      {favoriteProducts.length > 0 && (
-        <section className="space-y-3">
-          <h3 className="text-sm font-semibold text-white">Produtos favoritos</h3>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {favoriteProducts.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => setSelectedProduct(product)}
-                className="flex-shrink-0 cursor-pointer rounded-2xl border border-white/10 bg-card p-3 hover:border-primary/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.nome}
-                    className="h-12 w-12 rounded-lg object-cover"
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-white line-clamp-1 max-w-[120px]">
-                      {product.nome}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{product.categoria}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Category filter */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {categories.map((cat) => (
