@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { IphoneMockup } from "@/components/IphoneMockup";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -226,26 +227,12 @@ export default function EditVideosPage() {
             <span className="h-2 w-2 rounded-full bg-[#FE2C55] animate-pulse" />
             Preview
           </h3>
-          <div className="flex justify-center">
-            <div className={cn(
-              "relative overflow-hidden rounded-2xl bg-black max-w-[280px] border border-white/5",
-              getAspectRatio(),
-              "shadow-[0_0_30px_rgba(37,244,238,0.15),0_0_30px_rgba(254,44,85,0.15)]"
-            )}>
+          <div className="flex justify-center items-center p-8">
               {config.videoUrl ? (
-                <>
-                  <video
-                    ref={videoRef}
-                    src={config.videoUrl}
-                    className="h-full w-full object-cover"
-                    style={{ filter: config.filter }}
-                    loop
-                    playsInline
-                    onClick={togglePlay}
-                  />
+                <IphoneMockup videoSrc={config.videoUrl} videoRef={videoRef} videoStyle={{ filter: config.filter }}>
                   <button
                     onClick={togglePlay}
-                    className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity"
+                    className="absolute inset-0 z-40 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity"
                   >
                     {isPlaying ? (
                       <Pause className="h-12 w-12 text-white" />
@@ -287,16 +274,15 @@ export default function EditVideosPage() {
                       </span>
                     </div>
                   ))}
-                </>
+                </IphoneMockup>
               ) : (
-                <div className="flex h-full min-h-[400px] items-center justify-center">
+                <div className="flex h-full min-h-[400px] w-[280px] items-center justify-center rounded-2xl border border-dashed border-white/20 bg-black shadow-[0_0_30px_rgba(37,244,238,0.15)]">
                   <div className="text-center">
                     <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
                     <p className="text-sm text-muted-foreground">Nenhum video</p>
                   </div>
                 </div>
               )}
-            </div>
           </div>
           <canvas ref={canvasRef} className="hidden" />
         </div>

@@ -1,590 +1,347 @@
 import React, { useState } from "react";
-import { Zap, Check, ChevronRight, ChevronLeft, Sparkles, Wand2, Copy, RefreshCw, ExternalLink, PlayCircle } from "lucide-react";
+import { 
+  Zap, 
+  Wand2, 
+  RefreshCw, 
+  Copy, 
+  Trash2, 
+  LayoutPanelLeft,
+  Search,
+  CheckCircle,
+  Smartphone,
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  Sparkles,
+  MessageSquare,
+  FileText,
+  Clock,
+  Music,
+  Camera,
+  Layers,
+  Star,
+  Clapperboard,
+  Palette,
+  Laugh,
+  AlertCircle,
+  BookOpen,
+  MessageCircle,
+  Flame,
+  Target,
+  History
+} from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { NeonCard, NeonSection } from "@/components/synclab/NeonCard";
+import { Separator } from "@/components/ui/separator";
+import { usePrompts } from "@/hooks/usePrompts";
 import { cn } from "@/lib/utils";
 
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  items: string[];
-}
+const STEPS = ["Categorias", "Estilo", "Vídeo", "Gerar"];
 
-const CATEGORIES: Category[] = [
-  {
-    id: "alimentos",
-    name: "Alimentos & Frutas",
-    icon: "🍎",
-    items: ["Morango", "Abacate", "Limão", "Manga", "Uva", "Açaí", "Banana", "Maçã"],
-  },
-  {
-    id: "utensilios",
-    name: "Utensílios de Cozinha",
-    icon: "🍳",
-    items: ["Fritadeira Air Fryer", "Panela de Pressão", "Mixer", "Tábua de Corte", "Faca Chef", "Ralador"],
-  },
-  {
-    id: "personalizados",
-    name: "Personalizados",
-    icon: "🎨",
-    items: [],
-  },
+const CATEGORIES = [
+  { id: "moda", label: "Moda & Beleza", icon: Palette },
+  { id: "casa", label: "Casa & Cozinha", icon: Layers },
+  { id: "pets", label: "Pets", icon: Target },
+  { id: "eletronicos", label: "Eletrônicos", icon: Smartphone },
+  { id: "fitness", label: "Fitness & Saúde", icon: Flame },
+  { id: "comida", label: "Alimentos", icon: Zap },
+  { id: "financas", label: "Finanças", icon: FileText },
+  { id: "vlog", label: "Lifestyle/Vlog", icon: Camera },
 ];
 
-interface StyleOption {
-  id: string;
-  name: string;
-  desc: string;
-  icon: string;
-}
-
-const STYLES: StyleOption[] = [
-  { id: "comedia", name: "Comédia Rápida", desc: "Humor e ritmo acelerado", icon: "😂" },
-  { id: "suspense", name: "Suspense", desc: "Deixa o espectador ansioso", icon: "😱" },
-  { id: "historia", name: "Mini-História", desc: "Narrativa com começo, meio e fim", icon: "📖" },
-  { id: "falante", name: "Objeto Falante", desc: "O produto tem voz própria", icon: "🗣️" },
-  { id: "antes_depois", name: "Antes & Depois", desc: "Transformação impactante", icon: "🔥" },
-  { id: "tutorial", name: "Tutorial Rápido", desc: "Ensina algo em 30 segundos", icon: "🎯" },
-  { id: "pov", name: "POV", desc: "Ponto de vista imersivo", icon: "💬" },
-  { id: "trend", name: "Trend Dance", desc: "Sincronizado com trend atual", icon: "⚡" },
+const STYLES = [
+  { id: "engracado", label: "Engraçado", icon: Laugh },
+  { id: "educativo", label: "Educativo", icon: BookOpen },
+  { id: "urgente", label: "Urgente", icon: AlertCircle },
+  { id: "storytelling", label: "Storytelling", icon: History },
+  { id: "aesthetic", label: "Aesthetic", icon: Sparkles },
+  { id: "debate", label: "Debate", icon: MessageCircle },
 ];
 
-const duracoes = [
-  { value: "15s", label: "15 Segundos", sub: "TikTok Curto" },
-  { value: "30s", label: "30 Segundos", sub: "Ideal" },
-  { value: "60s", label: "60 Segundos", sub: "História Completa" },
+const VIDEO_TYPES = [
+  { id: "review", label: "Review de Produto", icon: Star },
+  { id: "dica", label: "Dicas Rápidas", icon: Sparkles },
+  { id: "lista", label: "Top 5 / Lista", icon: FileText },
+  { id: "tutorial", label: "Tutorial/How-to", icon: Clapperboard },
+  { id: "trend", label: "Baseado em Trend", icon: Music },
+  { id: "fake", label: "Fake Chat/WhatsApp", icon: MessageSquare },
 ];
-
-interface ScriptResult {
-  titulo: string;
-  hook: string;
-  roteiro: string;
-  cta_final: string;
-  hashtags: string[];
-  dicas_edicao: string;
-}
-
-const parts = ["Objeto", "Estilo", "Conteúdo", "Revisão"];
 
 export default function ViralCreator() {
-  const [currentPart, setCurrentPart] = useState(0);
-  const [viralMode, setViralMode] = useState(false);
-
-  // Form State
-  const [categoryId, setCategoryId] = useState("");
-  const [selectedObject, setSelectedObject] = useState("");
-  const [customObject, setCustomObject] = useState("");
-  const [selectedStyle, setSelectedStyle] = useState("");
-  const [message, setMessage] = useState("");
-  const [hook, setHook] = useState("");
-  const [cta, setCta] = useState("");
-  const [restrictions, setRestrictions] = useState("");
-  const [duration, setDuration] = useState("30s");
-
-  // Generate State
+  const [currentStep, setCurrentStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState(0);
-  const [result, setResult] = useState<ScriptResult | null>(null);
-
-  const activeCategory = CATEGORIES.find((c) => c.id === categoryId);
-  const activeStyle = STYLES.find((s) => s.id === selectedStyle);
+  const { addPrompt } = usePrompts();
+  
+  // Script Selection State
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedStyle, setSelectedStyle] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [topic, setTopic] = useState("");
 
   const handleNext = () => {
-    if (currentPart === 0) {
-      if (!categoryId) return toast.error("Selecione uma categoria");
-      if (categoryId === "personalizados" && !customObject.trim()) return toast.error("Digite o objeto personalizado");
-      if (categoryId !== "personalizados" && !selectedObject && !customObject.trim()) return toast.error("Selecione ou digite um objeto");
-    }
-    if (currentPart === 1 && !selectedStyle) return toast.error("Selecione um estilo");
-    if (currentPart === 2 && !message.trim()) return toast.error("A mensagem principal é obrigatória");
-    setCurrentPart(s => Math.min(s + 1, 3));
+    if (currentStep === 0 && !selectedCategory) return toast.error("Selecione uma categoria");
+    if (currentStep === 1 && !selectedStyle) return toast.error("Selecione um estilo");
+    if (currentStep === 2 && (!selectedType || !topic)) return toast.error("Preencha o tipo e o tópico");
+    
+    setCurrentStep(prev => prev + 1);
   };
 
-  const currentObject = selectedObject || customObject;
+  const fireConfetti = () => {
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#FE2C55', '#25F4EE', '#FFFFFF']
+    });
+  };
 
-  const generateScript = async () => {
+  const handleGenerate = async () => {
     setIsGenerating(true);
-    setResult(null);
     setGenProgress(0);
 
     const interval = setInterval(() => {
       setGenProgress(prev => {
-        if (prev >= 95) { clearInterval(interval); return 95; }
-        return prev + Math.random() * 15;
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 90;
+        }
+        return prev + 5;
       });
-    }, 400);
-
-    const prompt = `Você é um especialista em conteúdo viral para TikTok Shop.
-Crie um roteiro viral completo para um vídeo de ${duration} sobre: ${currentObject}
-Estilo: ${activeStyle?.name}
-Mensagem principal: ${message}
-Hook: ${hook}
-CTA: ${cta}
-Restrições: ${restrictions || "Nenhuma"}
-
-Responda APENAS em JSON válido sem markdown e sem blocos de código. A resposta deve começar com { e terminar com }.
-{
-  "titulo": "título chamativo do vídeo",
-  "hook": "frase de abertura dos primeiros 3 segundos",
-  "roteiro": "roteiro completo dividido em cenas com timecode",
-  "cta_final": "chamada para ação do final",
-  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5"],
-  "dicas_edicao": "dicas de edição e efeitos para usar"
-}`;
+    }, 200);
 
     try {
       const gKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!gKey) {
-        throw new Error("API Key do Gemini não encontrada na variável VITE_GEMINI_API_KEY.");
-      }
+      const prompt = `Você é um especialista em TikTok Shop. Crie um roteiro viral curto (máx 30s) para a categoria ${selectedCategory}, estilo ${selectedStyle}, e tipo de vídeo ${selectedType}. Tópico: ${topic}. Foque em alta retenção e CTA clara. Responda apenas com o roteiro formatado.`;
 
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${gKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${gKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { response_mime_type: "application/json" }
+          contents: [{ parts: [{ text: prompt }] }]
         })
       });
 
-      if (!res.ok) throw new Error("Falha na comunicação com a API");
-      
-      const data = await res.json();
-      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!textResponse) throw new Error("Resposta da IA vazia");
+      const data = await response.json();
+      const script = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro ao gerar roteiro.";
 
-      const parsed = JSON.parse(textResponse);
-      
-      clearInterval(interval);
       setGenProgress(100);
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      setResult(parsed);
-      toast.success("🔥 Roteiro viral gerado com sucesso!");
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#25F4EE', '#FE2C55', '#FFFFFF']
-      });
-
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || "Erro ao gerar roteiro. Tente novamente.");
+      addPrompt(`Viral Creator - ${topic}`, script, "Viral Creator");
+      fireConfetti();
+      toast.success("Roteiro viral gerado!");
+      setCurrentStep(4); // Result Page
+    } catch (error) {
+      toast.error("Erro ao conectar com a IA.");
     } finally {
-      clearInterval(interval);
       setIsGenerating(false);
+      clearInterval(interval);
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copiado para a área de transferência!");
-  };
+  const OptionCard = ({ selected, onClick, icon: Icon, label }: { selected: boolean, onClick: () => void, icon?: any, label: string }) => (
+    <Card 
+      onClick={onClick}
+      className={cn(
+        "cursor-pointer transition-all border-white/10 overflow-hidden group",
+        selected 
+          ? "bg-primary/20 border-primary shadow-[0_0_15px_rgba(254,44,85,0.2)]" 
+          : "bg-secondary/30 hover:bg-secondary/50"
+      )}
+    >
+      <CardContent className="p-4 flex flex-col items-center justify-center gap-3 text-center h-full">
+        {Icon && <Icon className={cn("w-6 h-6", selected ? "text-primary" : "text-muted-foreground group-hover:text-white")} />}
+        <span className={cn("text-xs font-bold uppercase tracking-wider", selected ? "text-white" : "text-muted-foreground")}>{label}</span>
+      </CardContent>
+    </Card>
+  );
 
-  // ── Se Gerando Result ──
-  if (isGenerating) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center animate-fade-in">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-8 text-center shadow-[0_0_30px_hsl(var(--neon-pink)/0.1)]">
-          <div className="mb-6">
-            <Sparkles className="mx-auto h-12 w-12 text-[hsl(var(--neon-pink))] animate-pulse" />
-          </div>
-          <h3 className="text-lg font-bold text-white mb-1">Processando conteúdo...</h3>
-          <p className="text-sm text-muted-foreground mb-6">Criando roteiro viral com IA</p>
-          <div className="relative mb-3">
-            <Progress value={genProgress} className="h-3 bg-secondary [&>div]:bg-gradient-to-r [&>div]:from-[hsl(var(--neon-pink))] [&>div]:to-[hsl(var(--neon-cyan))]" />
-          </div>
-          <p className="text-2xl font-bold text-white">{Math.round(genProgress)}%</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Se Exibindo Resultado Final ──
-  if (result) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-white">Viral Creator — Resultado</h2>
-            <p className="text-sm text-muted-foreground">Roteiro gerado com sucesso!</p>
-          </div>
-          <Button variant="outline" className="border-white/10" onClick={() => { setResult(null); setCurrentPart(0); setCustomObject(""); setSelectedObject(""); }}>
-            <RefreshCw className="mr-2 h-4 w-4" /> Novo Roteiro
-          </Button>
-        </div>
-
-        {/* Info Cards */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-[hsl(var(--neon-cyan))]/30 bg-card p-4 shadow-[0_0_20px_hsl(var(--neon-cyan)/0.1)]">
-            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-[hsl(var(--neon-cyan))]">Objeto Escolhido</p>
-            <div className="flex items-center gap-3">
-               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[hsl(var(--neon-cyan))]/10 text-2xl">
-                 📦
-               </div>
-               <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white">{currentObject}</p>
-               </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-[hsl(var(--neon-pink))]/30 bg-card p-4 shadow-[0_0_20px_hsl(var(--neon-pink)/0.1)]">
-            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-[hsl(var(--neon-pink))]">Estilo do Vídeo</p>
-            <div className="flex items-center gap-3">
-               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[hsl(var(--neon-pink))]/10 text-2xl">
-                 {activeStyle?.icon}
-               </div>
-               <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white">{activeStyle?.name}</p>
-               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Roteiro */}
-        <div className="rounded-2xl border border-white/10 bg-card p-5">
-           <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-white flex items-center gap-2">
-                 <PlayCircle className="w-5 h-5 text-[hsl(var(--neon-cyan))]" /> Roteiro Completo
-              </h3>
-              <Button size="sm" variant="outline" className="border-[hsl(var(--neon-cyan))]/30 text-[hsl(var(--neon-cyan))]" onClick={() => copyToClipboard(result.roteiro)}>
-                 <Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar Roteiro
-              </Button>
-           </div>
-           <div className="rounded-xl bg-secondary/50 p-4 text-sm text-white/80 whitespace-pre-wrap font-mono relative">
-               {result.roteiro}
-           </div>
-        </div>
-
-        {/* Hook and CTA */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="rounded-2xl border border-white/10 bg-card p-5">
-              <h3 className="font-semibold text-white mb-3">🪝 Hook Principal (3s)</h3>
-              <div className="rounded-xl bg-[hsl(var(--neon-pink))]/10 p-4 border border-[hsl(var(--neon-pink))]/20 relative">
-                 <p className="text-white/90 italic font-medium">"{result.hook}"</p>
-                 <button onClick={() => copyToClipboard(result.hook)} className="absolute right-3 top-3 text-[hsl(var(--neon-pink))]/50 hover:text-[hsl(var(--neon-pink))]">
-                    <Copy className="w-4 h-4" />
-                 </button>
-              </div>
-           </div>
-           
-           <div className="rounded-2xl border border-white/10 bg-card p-5">
-              <h3 className="font-semibold text-white mb-3">🎯 Call to Action (CTA)</h3>
-              <div className="rounded-xl bg-secondary/50 p-4 relative">
-                 <p className="text-white/90">{result.cta_final}</p>
-                 <button onClick={() => copyToClipboard(result.cta_final)} className="absolute right-3 top-3 text-muted-foreground hover:text-white">
-                    <Copy className="w-4 h-4" />
-                 </button>
-              </div>
-           </div>
-        </div>
-
-        {/* Edit Tips & Hashtags */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="rounded-2xl border border-white/10 bg-card p-5">
-              <h3 className="font-semibold text-white mb-3">🧠 Dicas de Edição</h3>
-              <div className="rounded-xl border-l-[hsl(var(--neon-cyan))] border-l-4 bg-secondary/30 p-4 text-sm text-white/80">
-                 {result.dicas_edicao}
-              </div>
-           </div>
-           <div className="rounded-2xl border border-white/10 bg-card p-5">
-              <div className="flex items-center justify-between mb-3">
-                 <h3 className="font-semibold text-white"># Hashtags</h3>
-                 <Button size="sm" variant="outline" className="h-7 px-2 border-white/10" onClick={() => copyToClipboard(result.hashtags.join(" "))}>
-                    <Copy className="h-3 w-3" />
-                 </Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                 {result.hashtags.map(tag => (
-                    <span key={tag} className="rounded-full border border-[hsl(var(--neon-pink))]/30 bg-[hsl(var(--neon-pink))]/10 px-3 py-1 text-sm text-[hsl(var(--neon-pink))]">
-                       {tag}
-                    </span>
-                 ))}
-              </div>
-           </div>
-        </div>
-        
-        {/* Full copy action */}
-        <div className="flex justify-end pt-4">
-           <Button className="bg-gradient-to-r from-[hsl(var(--neon-pink))] to-[hsl(var(--neon-cyan))] text-white font-semibold" onClick={() => copyToClipboard(`${result.titulo}\n\nHOOK: ${result.hook}\n\nROTEIRO:\n${result.roteiro}\n\nCTA: ${result.cta_final}\n\nHashtags: ${result.hashtags.join(' ')}`)}>
-             <Copy className="mr-2 h-4 w-4" /> Copiar Pacote Completo
-           </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Main Wizard View ──
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
-      <div className="flex items-center justify-between">
-         <div>
-           <h2 className="text-xl font-bold text-white">Viral Creator</h2>
-           <p className="text-sm text-muted-foreground">Crie roteiros virais incríveis com IA em segundos</p>
-         </div>
-         <Button
-           variant="outline"
-           onClick={() => setViralMode(!viralMode)}
-           className={cn(
-               "font-bold transition-all border-white/10",
-               viralMode 
-                 ? "bg-[hsl(var(--neon-pink))]/20 text-[hsl(var(--neon-pink))] border-[hsl(var(--neon-pink))]/50 hover:bg-[hsl(var(--neon-pink))]/30" 
-                 : "bg-transparent text-muted-foreground"
-             )}
-         >
-           {viralMode ? (
-             <><Sparkles className="mr-2 w-4 h-4 animate-pulse" /> Modo Viral Ativo</>
-           ) : (
-             <><Zap className="mr-2 w-4 h-4 text-[hsl(var(--neon-cyan))]" /> Modo Viral</>
-           )}
-         </Button>
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-[0_0_20px_rgba(254,44,85,0.15)]">
+            <Zap className="w-8 h-8 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-white">Viral Creator</h2>
+            <p className="text-muted-foreground">Scripts inteligentes que explodem em visualizações</p>
+          </div>
+        </div>
       </div>
 
-      {/* Stepper (Matched to CreateVideoPage) */}
-      <div className="flex items-center justify-center gap-2 mb-8">
-        {parts.map((part, idx) => (
-          <div key={part} className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPart(idx)}
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all",
-                idx === currentPart
-                  ? "bg-gradient-to-r from-[hsl(var(--neon-pink))] to-[hsl(var(--neon-cyan))] text-white shadow-[0_0_12px_hsl(var(--neon-pink)/0.4)]"
-                  : idx < currentPart
-                  ? "bg-[hsl(var(--neon-pink))]/20 text-[hsl(var(--neon-pink))]"
-                  : "bg-secondary text-muted-foreground"
-              )}
-            >
-              {idx < currentPart ? <Check className="h-4 w-4" /> : idx + 1}
-            </button>
-            <span className={cn("hidden text-sm sm:block", idx === currentPart ? "text-white font-medium" : "text-muted-foreground")}>
-              {part}
-            </span>
-            {idx < parts.length - 1 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-          </div>
+      {/* Stepper */}
+      <div className="flex items-center justify-center gap-2 max-w-xl mx-auto">
+        {STEPS.map((step, idx) => (
+          <React.Fragment key={idx}>
+            <div className="flex flex-col items-center gap-2">
+              <div className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all",
+                idx === currentStep ? "bg-primary text-white shadow-[0_0_15px_rgba(254,44,85,0.5)]" : idx < currentStep ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
+              )}>
+                {idx < currentStep ? <Check className="w-5 h-5" /> : idx + 1}
+              </div>
+              <span className={cn("text-[10px] uppercase font-bold tracking-tighter", idx === currentStep ? "text-white" : "text-muted-foreground")}>{step}</span>
+            </div>
+            {idx < STEPS.length - 1 && <div className={cn("h-0.5 flex-1 max-w-[40px] mb-6", idx < currentStep ? "bg-primary/50" : "bg-secondary")} />}
+          </React.Fragment>
         ))}
       </div>
 
-      {/* PART 1 */}
-      {currentPart === 0 && (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Escolha a Categoria" subtitle="Qual o tipo do seu produto?">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                 {CATEGORIES.map(cat => (
-                    <NeonCard 
-                       key={cat.id} 
-                       selected={categoryId === cat.id} 
-                       onClick={() => { setCategoryId(cat.id); setSelectedObject(""); setCustomObject(""); }}
-                    >
-                       <div className="text-center">
-                          <span className="text-2xl">{cat.icon}</span>
-                          <p className="mt-1 text-sm font-medium text-white">{cat.name}</p>
-                       </div>
-                    </NeonCard>
-                 ))}
-              </div>
-            </NeonSection>
+      <div className="max-w-4xl mx-auto">
+        {isGenerating ? (
+          <div className="flex flex-col items-center justify-center min-h-[400px] gap-6 text-center">
+            <div className="relative">
+               <Wand2 className="w-16 h-16 text-primary animate-spin-slow" />
+               <div className="absolute -inset-4 bg-primary/20 rounded-full blur-xl animate-pulse" />
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-2xl font-bold">Criando Roteiro...</h3>
+              <Progress value={genProgress} className="w-64 h-2 mx-auto" />
+              <p className="text-xs text-muted-foreground">Nossa IA está analisando padrões de viralização</p>
+            </div>
           </div>
-
-          {categoryId && (
-             <div className="rounded-2xl border border-white/10 bg-card p-5 animate-fade-in">
-                <NeonSection title="Escolha o Objeto" subtitle="Selecione ou crie um objeto personalizado">
-                   {activeCategory && activeCategory.items.length > 0 && (
-                      <div className="flex flex-wrap gap-3 mb-6">
-                         {activeCategory.items.map(item => (
-                            <NeonCard 
-                               key={item} 
-                               selected={selectedObject === item} 
-                               onClick={() => { setSelectedObject(item); setCustomObject(""); }}
-                               className="px-4 py-2 flex-shrink-0"
-                            >
-                               <span className="text-sm font-medium text-white">{item}</span>
-                            </NeonCard>
-                         ))}
-                      </div>
-                   )}
-                   <div className="mt-2">
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Objeto personalizado:</p>
-                      <Input
-                         placeholder="Escreva seu produto..."
-                         value={customObject}
-                         onChange={(e) => { setCustomObject(e.target.value); setSelectedObject(""); }}
-                         className="bg-secondary border-white/10"
-                      />
-                   </div>
-                </NeonSection>
-             </div>
-          )}
-        </div>
-      )}
-
-      {/* PART 2 */}
-      {currentPart === 1 && (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-             <NeonSection title="Estilo do Vídeo" subtitle="Qual o formato do roteiro?">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                   {STYLES.map(style => (
-                      <NeonCard 
-                         key={style.id} 
-                         selected={selectedStyle === style.id} 
-                         onClick={() => setSelectedStyle(style.id)}
-                         className="p-4"
-                      >
-                         <div className="flex items-center gap-4">
-                            <div className="text-3xl">{style.icon}</div>
-                            <div className="text-left">
-                               <p className="font-semibold text-white">{style.name}</p>
-                               <p className="text-xs text-muted-foreground">{style.desc}</p>
-                            </div>
-                         </div>
-                      </NeonCard>
-                   ))}
+        ) : (
+          <>
+            {currentStep === 0 && (
+              <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                <div className="text-center">
+                  <h3 className="text-xl font-bold">Qual o nicho do vídeo?</h3>
+                  <p className="text-sm text-muted-foreground">Cada nicho tem um padrão de comportamento diferente no TikTok</p>
                 </div>
-             </NeonSection>
-          </div>
-        </div>
-      )}
-
-      {/* PART 3 */}
-      {currentPart === 2 && (
-        <div className="space-y-6">
-           <div className="rounded-2xl border border-white/10 bg-card p-5">
-              <NeonSection title="Mensagem Principal" subtitle="Sobre o que o vídeo precisa falar obrigatoriamente?">
-                 <Textarea
-                    placeholder="Ex: Esse produto mudou a minha vida porque..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="bg-secondary border-white/10 min-h-[100px]"
-                 />
-              </NeonSection>
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="rounded-2xl border border-white/10 bg-card p-5">
-                 <NeonSection title="Gancho (Hook)" subtitle="Abertura opcional específica">
-                    <Input
-                       placeholder="Ex: Pare o scroll agora mesmo..."
-                       value={hook}
-                       onChange={(e) => setHook(e.target.value)}
-                       className="bg-secondary border-white/10 mt-2"
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {CATEGORIES.map(c => (
+                    <OptionCard 
+                      key={c.id} 
+                      label={c.label} 
+                      icon={c.icon} 
+                      selected={selectedCategory === c.label} 
+                      onClick={() => setSelectedCategory(c.label)} 
                     />
-                 </NeonSection>
+                  ))}
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-card p-5">
-                 <NeonSection title="Call to Action (CTA)" subtitle="Chamada final opcional">
-                    <Input
-                       placeholder="Ex: Curte e me siga para mais..."
-                       value={cta}
-                       onChange={(e) => setCta(e.target.value)}
-                       className="bg-secondary border-white/10 mt-2"
-                    />
-                 </NeonSection>
-              </div>
-           </div>
+            )}
 
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="rounded-2xl border border-white/10 bg-card p-5">
-                 <NeonSection title="Duração Alvo" subtitle="O ideal para TikTok Shorts">
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                       {duracoes.map(d => (
-                          <NeonCard 
-                             key={d.value} 
-                             selected={duration === d.value} 
-                             onClick={() => setDuration(d.value)}
-                             className="p-2 text-center"
+            {currentStep === 1 && (
+              <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                <div className="text-center">
+                  <h3 className="text-xl font-bold">Qual o estilo de comunicação?</h3>
+                  <p className="text-sm text-muted-foreground">O tom de voz define a conexão com o público</p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {STYLES.map(s => (
+                    <OptionCard 
+                      key={s.id} 
+                      label={s.label} 
+                      icon={s.icon} 
+                      selected={selectedStyle === s.label} 
+                      onClick={() => setSelectedStyle(s.label)} 
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                <div className="text-center">
+                  <h3 className="text-xl font-bold">Sobre o que vamos falar?</h3>
+                  <p className="text-sm text-muted-foreground">Defina o formato e o tema principal</p>
+                </div>
+                <Card className="bg-card border-white/5">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-3">
+                      <Label className="uppercase text-xs font-bold tracking-widest text-muted-foreground">Formato do Conteúdo</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {VIDEO_TYPES.map(t => (
+                          <button
+                            key={t.id}
+                            onClick={() => setSelectedType(t.label)}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl border text-sm transition-all",
+                              selectedType === t.label ? "bg-primary border-primary text-white" : "bg-secondary/40 border-white/5 text-muted-foreground hover:bg-secondary/60"
+                            )}
                           >
-                             <p className="text-sm font-semibold text-white">{d.label}</p>
-                             <p className="text-[10px] text-muted-foreground">{d.sub}</p>
-                          </NeonCard>
-                       ))}
+                            <t.icon className="w-4 h-4" />
+                            <span className="font-medium text-xs truncate">{t.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                 </NeonSection>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-card p-5">
-                 <NeonSection title="Restrições" subtitle="O que a IA NÃO deve mencionar (opcional)">
-                    <Textarea
-                       placeholder="Ex: Não use termos como grátis, não exagere..."
-                       value={restrictions}
-                       onChange={(e) => setRestrictions(e.target.value)}
-                       className="bg-secondary border-white/10 min-h-[60px] mt-2"
-                    />
-                 </NeonSection>
-              </div>
-           </div>
-        </div>
-      )}
 
-      {/* PART 4 */}
-      {currentPart === 3 && (
-        <div className="space-y-6">
-           <div className="rounded-2xl border border-white/10 bg-card p-6">
-              <div className="flex flex-col gap-6">
-                 <div>
-                    <h3 className="text-lg font-bold text-white mb-4">Revisão Final</h3>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                       <div className="flex items-center justify-between rounded-xl bg-secondary/50 p-4">
-                          <div>
-                             <p className="text-xs font-medium uppercase text-muted-foreground tracking-wider mb-1">Objeto</p>
-                             <p className="font-semibold text-white">{currentObject || "Nenhum"}</p>
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => setCurrentPart(0)}>Editar</Button>
-                       </div>
-                       <div className="flex items-center justify-between rounded-xl bg-secondary/50 p-4">
-                          <div>
-                             <p className="text-xs font-medium uppercase text-muted-foreground tracking-wider mb-1">Estilo</p>
-                             <p className="font-semibold text-[hsl(var(--neon-cyan))]">{activeStyle?.name || "Nenhum"}</p>
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => setCurrentPart(1)}>Editar</Button>
-                       </div>
+                    <div className="space-y-3">
+                      <Label className="uppercase text-xs font-bold tracking-widest text-muted-foreground">Tópico ou Nome do Produto</Label>
+                      <Input 
+                        placeholder="Ex: Novo fone Bluetooth / Como organizar a geladeira..." 
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                        className="bg-secondary/50 h-12 border-white/10 text-lg"
+                      />
                     </div>
-                    
-                    <div className="mt-3 rounded-xl bg-secondary/50 p-4">
-                       <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs font-medium uppercase text-muted-foreground tracking-wider">Conteúdo Base</p>
-                          <Button variant="ghost" size="sm" className="h-6" onClick={() => setCurrentPart(2)}>Editar</Button>
-                       </div>
-                       <div className="space-y-1 text-sm text-white/80">
-                          <p><span className="text-muted-foreground w-20 inline-block">Mensagem:</span> {message}</p>
-                          <p><span className="text-muted-foreground w-20 inline-block">Duração:</span> {duration}</p>
-                       </div>
-                    </div>
-                 </div>
-
-                 <Button 
-                    className="w-full bg-gradient-to-r from-[hsl(var(--neon-pink))] to-[hsl(var(--neon-cyan))] text-white font-bold h-14 text-lg shadow-[0_0_20px_hsl(var(--neon-cyan)/0.3)] hover:shadow-[0_0_30px_hsl(var(--neon-cyan)/0.5)] transition-all"
-                    onClick={generateScript}
-                 >
-                    <Sparkles className="mr-2 h-5 w-5" /> Gerar Roteiro Viral
-                 </Button>
+                  </CardContent>
+                </Card>
               </div>
-           </div>
-        </div>
-      )}
+            )}
 
-      {/* Navigation Footer */}
-      {currentPart < 3 && (
-        <div className="flex items-center justify-between pt-4">
-           <div>
-              {currentPart > 0 && (
-                 <Button variant="ghost" onClick={() => setCurrentPart(s => s - 1)}>
-                    <ChevronLeft className="mr-2 h-4 w-4" /> Anterior
-                 </Button>
-              )}
-           </div>
-           <Button onClick={handleNext} className="bg-gradient-to-r from-[hsl(var(--neon-pink))] to-[hsl(var(--neon-cyan))] text-white">
-              Próximo <ChevronRight className="ml-2 h-4 w-4" />
-           </Button>
-        </div>
-      )}
+            {currentStep === 3 && (
+              <div className="space-y-8 text-center animate-in zoom-in-95 duration-500">
+                <div className="p-8 bg-primary/5 rounded-3xl border border-primary/20 space-y-4 max-w-lg mx-auto">
+                   <Wand2 className="w-12 h-12 text-primary mx-auto" />
+                   <h3 className="text-2xl font-bold">Pronto para visualizar!</h3>
+                   <div className="space-y-2 text-sm text-muted-foreground">
+                      <p>Categoria: <span className="text-primary font-bold">{selectedCategory}</span></p>
+                      <p>Estilo: <span className="text-primary font-bold">{selectedStyle}</span></p>
+                      <p>Tipo: <span className="text-primary font-bold">{selectedType}</span></p>
+                   </div>
+                   <Button onClick={handleGenerate} className="w-full h-14 text-lg bg-primary hover:bg-primary/90 text-white font-bold shadow-[0_0_25px_rgba(254,44,85,0.4)]">
+                     <Zap className="mr-2 w-5 h-5 fill-white" /> Gerar Roteiros Virais
+                   </Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 4 && (
+              <div className="space-y-6 text-center animate-in fade-in duration-500">
+                <div className="p-12 bg-secondary/20 rounded-3xl border border-white/5 space-y-4">
+                  <CheckCircle className="w-16 h-16 text-primary mx-auto" />
+                  <h3 className="text-2xl font-bold">Roteiro Salvo!</h3>
+                  <p className="text-muted-foreground">O roteiro gerado pela IA já está disponível na sua aba de "Meus Prompts".</p>
+                  <div className="flex justify-center gap-4 pt-4">
+                    <Button variant="outline" onClick={() => { setCurrentStep(0); setSelectedCategory(""); setSelectedStyle(""); setSelectedType(""); setTopic(""); }}>
+                      <RefreshCw className="mr-2 h-4 w-4" /> Criar Outro
+                    </Button>
+                    <Button onClick={() => window.location.href = "/meus-prompts"}>
+                      <FileText className="mr-2 h-4 w-4" /> Ver Roteiros
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* NavButtons */}
+            {currentStep < 3 && (
+              <div className="flex justify-between items-center mt-8">
+                <div>
+                  {currentStep > 0 && (
+                    <Button variant="ghost" onClick={() => setCurrentStep(prev => prev - 1)}>
+                      <ChevronLeft className="mr-2 h-4 w-4" /> Anterior
+                    </Button>
+                  )}
+                </div>
+                <Button onClick={handleNext} className="bg-primary hover:bg-primary/90 text-white px-8 h-12 font-bold group">
+                  Próximo <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

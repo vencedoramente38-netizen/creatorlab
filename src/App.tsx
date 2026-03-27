@@ -14,6 +14,9 @@ import TutorialPage from "@/pages/TutorialPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/NotFound";
 import ViralCreator from "@/pages/ViralCreator";
+import AnaliseConta from "@/pages/AnaliseConta";
+import Academy from "@/pages/Academy";
+import CriarAvatar from "@/pages/CriarAvatar";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +33,9 @@ const App = () => (
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/produtos" element={<ProductsPage />} />
             <Route path="/viral-creator" element={<ViralCreator />} />
+            <Route path="/analise-conta" element={<AnaliseConta />} />
+            <Route path="/academy" element={<Academy />} />
+            <Route path="/criar-avatar" element={<CriarAvatar />} />
             <Route path="/criar-video" element={<CreateVideoPage />} />
             <Route path="/editar-videos" element={<EditVideosPage />} />
             <Route path="/meus-prompts" element={<MyPromptsPage />} />

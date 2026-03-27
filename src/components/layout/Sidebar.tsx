@@ -13,6 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  GraduationCap,
+  Wand2,
+  UserSearch,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -27,6 +30,9 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Package, label: "Radar de Produtos", path: "/produtos" },
   { icon: Zap, label: "Viral Creator", path: "/viral-creator" },
+  { icon: Wand2, label: "Criar Avatar", path: "/criar-avatar" },
+  { icon: UserSearch, label: "Análise de Conta", path: "/analise-conta" },
+  { icon: GraduationCap, label: "Academy", path: "/academy" },
   { icon: Video, label: "Creator Lab", path: "/criar-video" },
   { icon: Film, label: "Creator Editor", path: "/editar-videos" },
   { icon: FileText, label: "Meus Prompts", path: "/meus-prompts" },

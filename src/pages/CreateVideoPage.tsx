@@ -1,152 +1,160 @@
-import { useState, useCallback } from "react";
-import {
-  Check, ChevronRight, ChevronLeft, Download, Copy,
-  ExternalLink, Shuffle, Plus, Search, Mic, Sparkles,
-  Camera, Eye, User, Clock
+import React, { useState, useCallback, useMemo } from "react";
+import { 
+  Wand2, 
+  Sparkles, 
+  Copy, 
+  RefreshCw, 
+  ChevronRight, 
+  ChevronLeft, 
+  Check, 
+  Video, 
+  Smartphone,
+  Info,
+  CheckCircle,
+  Zap,
+  Film,
+  Music,
+  Camera,
+  Layers,
+  Star,
+  MessageSquare,
+  Package,
+  History,
+  Target,
+  Rocket
 } from "lucide-react";
+import { toast } from "sonner";
+import confetti from "canvas-confetti";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProductSelectorModal } from "@/components/products/ProductSelectorModal";
 import { useProducts } from "@/hooks/useProducts";
 import { usePrompts } from "@/hooks/usePrompts";
-import { useConfetti } from "@/hooks/useConfetti";
-import { defaultAvatars } from "@/data/products";
-import { Product } from "@/data/products";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
-import { NeonCard, NeonSection } from "@/components/synclab/NeonCard";
-import { ProductSelectorModal } from "@/components/synclab/ProductSelectorModal";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { Product } from "@/data/products";
 
-// ── Config types ──
-interface CreatorLabConfig {
-  productId: number | null;
-  cenario: string;
-  cenarioCustom: string;
-  cameraStyle: string;
-  avatarId: number | null;
-  customAvatarUrl: string;
-  instrucoes: string;
-  duracao: string;
-  mood: string;
-  tipoVoz: string;
-  tonalidade: string;
-  falaAvatar: string;
-}
-
-const initial: CreatorLabConfig = {
-  productId: null,
-  cenario: "",
-  cenarioCustom: "",
-  cameraStyle: "",
-  avatarId: null,
-  customAvatarUrl: "",
-  instrucoes: "",
-  duracao: "",
-  mood: "",
-  tipoVoz: "",
-  tonalidade: "",
-  falaAvatar: "",
-};
-
-// ── Options data ──
 const cenarios = [
-  { value: "casa", label: "Em Casa", emoji: "🏠" },
-  { value: "estudio", label: "Estúdio", emoji: "🎬" },
-  { value: "rua", label: "Na Rua", emoji: "🌆" },
-  { value: "natureza", label: "Natureza", emoji: "🌿" },
-  { value: "loja", label: "Loja / Vitrine", emoji: "🏪" },
-  { value: "escritorio", label: "Escritório", emoji: "💼" },
-  { value: "custom", label: "Personalizado", emoji: "✏️" },
-];
-
-const duracoes = [
-  { value: "1-take", label: "1 take", sub: "~8s" },
-  { value: "2-takes", label: "2 takes", sub: "~16s" },
-  { value: "3-takes", label: "3 takes", sub: "~24s" },
-  { value: "4-takes", label: "4 takes", sub: "~32s" },
-  { value: "5-takes", label: "5 takes", sub: "~40s" },
+  { value: "casa", label: "Em Casa", icon: "🏠" },
+  { value: "cozinha", label: "Cozinha", icon: "🍳" },
+  { value: "escritorio", label: "Escritório", icon: "💼" },
+  { value: "quarto", label: "Quarto", icon: "🛏️" },
+  { value: "banheiro", label: "Banheiro", icon: "🚿" },
+  { value: "externo", label: "Externo/Rua", icon: "🌳" },
+  { value: "estudio", label: "Estúdio Profissional", icon: "📹" },
+  { value: "custom", label: "Personalizado", icon: "✏️" }
 ];
 
 const moods = [
-  { value: "animado", label: "Animado", emoji: "🔥", desc: "Energia alta, empolgação contagiante" },
-  { value: "calmo", label: "Calmo", emoji: "😌", desc: "Tranquilo, confiante e sereno" },
-  { value: "urgente", label: "Urgente", emoji: "⚡", desc: "Rápido, escassez, 'compre agora!'" },
-  { value: "divertido", label: "Divertido", emoji: "😂", desc: "Humor, leveza e descontração" },
+  { value: "animado", label: "Animado/Energético", icon: "⚡" },
+  { value: "calmo", label: "Calmo/Relaxante", icon: "🌿" },
+  { value: "curioso", label: "Curioso/Misterioso", icon: "🔍" },
+  { value: "urgente", label: "Urgente", icon: "🚨" },
+  { value: "engracado", label: "Engraçado/Humorado", icon: "😂" },
+  { value: "serio", label: "Sério/Profissional", icon: "🛡️" }
+];
+
+const duracoes = [
+  { value: "curto", label: "3 takes (~24s)", icon: "⏱️" },
+  { value: "medio", label: "5 takes (~40s)", icon: "⏱️" },
+  { value: "longo", label: "8+ takes (~60s+)", icon: "⏱️" }
 ];
 
 const tonalidades = [
-  { value: "grave", label: "Grave" },
-  { value: "medio", label: "Médio" },
-  { value: "agudo", label: "Agudo" },
-  { value: "doce", label: "Doce" },
-  { value: "energetico", label: "Energético" },
-  { value: "serio", label: "Sério" },
+  { value: "calma", label: "Suave/Calma" },
+  { value: "normal", label: "Natural/Médio" },
+  { value: "agressiva", label: "Intensa/Agressiva" }
 ];
 
 const videoStyles = [
-  "UGC (User Generated Content)", "Storytelling emocional", "Review honesto",
-  "ASMR / Satisfying", "Unboxing", "Top 5 / Ranking",
-  "Comparação", "Tutorial passo a passo", "POV", "Trend / Viral",
+  "Review Clássico",
+  "Uso no Dia a Dia",
+  "Problema x Solução",
+  "Unboxing Aesthetic",
+  "Comparativo",
+  "ASMR de Uso",
+  "Storytelling Curto",
+  "Dicas Rápidas"
 ];
 
-const hashtags = [
-  "#fyp", "#foryou", "#tiktokshop", "#viral", "#compras",
-  "#oferta", "#promocao", "#tendencia", "#recomendo", "#dicadodia",
-  "#achados", "#tiktokbrasil", "#comprasonline",
+const avatars = [
+  { id: 1, name: "Helena", desc: "Voz Suave & Natural", style: "Feminina" },
+  { id: 2, name: "Gabriel", desc: "Voz Confiante & Firme", style: "Masculina" },
+  { id: 3, name: "Sophia", desc: "Voz Jovem & Dinâmica", style: "Feminina" },
+  { id: 4, name: "Lucas", desc: "Voz Deep & Profissional", style: "Masculina" },
 ];
 
-const parts = ["Seleção", "Configuração", "Fala", "Revisão"];
+interface Config {
+  productId: number | null;
+  cenario: string;
+  cenarioCustom: string;
+  mood: string;
+  duracao: string;
+  cameraStyle: string;
+  selectedAvatarId: number;
+  tonalidade: string;
+  tipoVoz: string;
+  falaAvatar: string;
+  instrucoes: string;
+}
 
-// ── Main Component ──
 export default function CreateVideoPage() {
-  const [config, setConfig] = useState<CreatorLabConfig>(initial);
-  const [currentPart, setCurrentPart] = useState(0);
-  const [generatedPrompt, setGeneratedPrompt] = useState("");
+  const [currentPart, setCurrentPart] = useState(1);
+  const { products } = useProducts();
+  const { addPrompt } = usePrompts();
+  const [showProductModal, setShowProductModal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState(0);
   const [showResult, setShowResult] = useState(false);
-  const [promptExpanded, setPromptExpanded] = useState(false);
+  const [generatedPrompt, setGeneratedPrompt] = useState("");
   const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
-  const [showProductModal, setShowProductModal] = useState(false);
 
-  const { products, getFavoriteProducts, isFavorite } = useProducts();
-  const { addPrompt } = usePrompts();
-  const { fire: fireConfetti } = useConfetti();
+  const [config, setConfig] = useState<Config>({
+    productId: null,
+    cenario: "casa",
+    cenarioCustom: "",
+    mood: "animado",
+    duracao: "curto",
+    cameraStyle: "avatar",
+    selectedAvatarId: 1,
+    tonalidade: "normal",
+    tipoVoz: "feminina",
+    falaAvatar: "",
+    instrucoes: ""
+  });
 
-  const favoriteProducts = getFavoriteProducts();
-  const selectedProduct = products.find(p => p.id === config.productId);
-  const selectedAvatar = config.avatarId === -1
-    ? { id: -1, name: "Seu avatar", imageUrl: config.customAvatarUrl }
-    : defaultAvatars.find(a => a.id === config.avatarId) || null;
-
-  const set = useCallback(<K extends keyof CreatorLabConfig>(key: K, value: CreatorLabConfig[K]) => {
+  const setConfigValue = <K extends keyof Config>(key: K, value: Config[K]) => {
     setConfig(prev => ({ ...prev, [key]: value }));
-  }, []);
-
-  // ── Download helper ──
-  const handleDownload = async (imageUrl: string, name: string) => {
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${name.replace(/\s+/g, "-").toLowerCase()}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      toast.success("Download concluído! 🎉");
-      fireConfetti();
-    } catch {
-      toast.error("Erro no download");
-    }
   };
 
-  // ── Generate Prompt ──
+  const selectedProduct = useMemo(() => 
+    products.find(p => p.id === config.productId), 
+    [products, config.productId]
+  );
+
+  const selectedAvatar = useMemo(() => 
+    avatars.find(a => a.id === config.selectedAvatarId),
+    [config.selectedAvatarId]
+  );
+
+  const fireConfetti = () => {
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#FE2C55', '#25F4EE', '#FFFFFF']
+    });
+  };
+
   const generatePrompt = useCallback((styleOverride?: string) => {
     const product = products.find(p => p.id === config.productId);
-    if (!product) return;
+    if (!product) return "";
 
     const style = styleOverride || videoStyles[currentStyleIndex];
     const cenarioText = config.cenario === "custom" ? config.cenarioCustom : cenarios.find(c => c.value === config.cenario)?.label || "Livre";
@@ -154,26 +162,29 @@ export default function CreateVideoPage() {
     const duracaoText = duracoes.find(d => d.value === config.duracao)?.label || "3 takes (~24s)";
     const avatar = selectedAvatar;
 
-    const prompt = `Você é um roteirista profissional especializado em vídeos virais para TikTok Shop. Crie um roteiro COMPLETO e DETALHADO seguindo TODAS as instruções abaixo.
+    // Fixed: Hashtags handle missing property and non-array types safely
+    const hashtags = ["#tiktokshop", "#comprassemanais"];
+
+    const promptText = `Você é um roteirista profissional especializado em vídeos virais para TikTok Shop. Crie um roteiro COMPLETO e DETALHADO seguindo TODAS as instruções abaixo.
 
 ====================================
 1. BRIEFING DO VÍDEO
 ====================================
-ESTILO DO VÍDEO: ${style}
-PRODUTO: ${product.nome}
-CATEGORIA: ${product.categoria}
-PREÇO: ${product.precoTexto || `R$ ${product.preco.toFixed(2)}`}
-COMISSÃO: ${product.comissao}%
-LINK: ${product.linkTiktok}
-CENÁRIO: ${cenarioText}
-ESTILO DE CÂMERA: ${config.cameraStyle === "avatar" ? "Avatar Visual" : "POV (Ponto de Vista)"}
-${avatar ? `AVATAR: ${avatar.name}` : "AVATAR: Nenhum"}
-DURAÇÃO: ${duracaoText}
-TOM/MOOD: ${moodText}
-TIPO DE VOZ: ${config.tipoVoz === "feminina" ? "Feminina" : "Masculina"}
-TONALIDADE: ${tonalidades.find(t => t.value === config.tonalidade)?.label || "Médio"}
-${config.instrucoes ? `INSTRUÇÕES EXTRAS: ${config.instrucoes}` : ""}
-${config.falaAvatar ? `FALA DO AVATAR: ${config.falaAvatar}` : ""}
+ESTILO DO VÍDEO: ${String(style)}
+PRODUTO: ${String(product.nome)}
+CATEGORIA: ${String(product.categoria)}
+PREÇO: ${String(product.precoTexto || `R$ ${product.preco.toFixed(2)}`)}
+COMISSÃO: ${String(product.comissao)}%
+LINK: ${String(product.linkTiktok)}
+CENÁRIO: ${String(cenarioText)}
+ESTILO DE CÂMERA: ${String(config.cameraStyle === "avatar" ? "Avatar Visual" : "POV (Ponto de Vista)")}
+${avatar ? `AVATAR: ${String(avatar.name)}` : "AVATAR: Nenhum"}
+DURAÇÃO: ${String(duracaoText)}
+TOM/MOOD: ${String(moodText)}
+TIPO DE VOZ: ${String(config.tipoVoz === "feminina" ? "Feminina" : "Masculina")}
+TONALIDADE: ${String(tonalidades.find(t => t.value === config.tonalidade)?.label || "Médio")}
+${config.instrucoes ? `INSTRUÇÕES EXTRAS: ${String(config.instrucoes)}` : ""}
+${config.falaAvatar ? `FALA DO AVATAR: ${String(config.falaAvatar)}` : ""}
 
 ====================================
 2. PERSONA DO CRIADOR
@@ -249,7 +260,7 @@ Para cada cena, forneça:
 ====================================
 7. SUGESTÕES DE B-ROLL / TAKE / ENQUADRAMENTO
 ====================================
-Liste pelo menos 5 sugestões de takes adicionais:
+Liste pelo menos 5 sugerões de takes adicionais:
 1. Close-up extremo do produto
 2. Mão segurando o produto (aesthetic)
 3. Pessoa usando em cenário real
@@ -291,20 +302,19 @@ Verifique se o roteiro:
 11. HASHTAGS RECOMENDADAS
 ====================================
 ${hashtags.join(" ")}
-+ 5 hashtags específicas do nicho "${product.categoria}"
++ 5 hashtags específicas do nicho "${String(product.categoria)}"
 
 ====================================
 OUTPUT FINAL: Entregue o roteiro completo e estruturado acima, pronto para ser copiado e usado no Google Flow VEO3.
 ====================================`;
 
-    return prompt;
+    return promptText;
   }, [config, products, currentStyleIndex, selectedAvatar]);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
     setGenProgress(0);
 
-    // Simulate progress
     const interval = setInterval(() => {
       setGenProgress(prev => {
         if (prev >= 95) { clearInterval(interval); return 95; }
@@ -312,7 +322,6 @@ OUTPUT FINAL: Entregue o roteiro completo e estruturado acima, pronto para ser c
       });
     }, 300);
 
-    // Simulate generation delay
     await new Promise(resolve => setTimeout(resolve, 2500));
 
     clearInterval(interval);
@@ -327,7 +336,7 @@ OUTPUT FINAL: Entregue o roteiro completo e estruturado acima, pronto para ser c
     await new Promise(resolve => setTimeout(resolve, 500));
     setIsGenerating(false);
     setShowResult(true);
-    toast.success("Prompt V03 gerado com sucesso! 🚀");
+    toast.success("Prompt V03 gerado com sucesso!");
     fireConfetti();
   };
 
@@ -344,541 +353,439 @@ OUTPUT FINAL: Entregue o roteiro completo e estruturado acima, pronto para ser c
 
   const handleCopyPrompt = () => {
     navigator.clipboard.writeText(generatedPrompt);
-    toast.success("Prompt copiado! 📋");
+    toast.success("Prompt copiado!");
     fireConfetti();
   };
 
-  const handleCopyHashtags = () => {
-    navigator.clipboard.writeText(hashtags.join(" "));
-    toast.success("Hashtags copiadas! 📋");
-    fireConfetti();
-  };
-
-  const handlePickGalleryAvatar = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          set("avatarId", -1);
-          set("customAvatarUrl", ev.target?.result as string);
-          toast.success("Avatar carregado!");
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    input.click();
-  };
-
-  const handleGenerateAISpeech = () => {
-    const product = selectedProduct;
-    if (!product) { toast.error("Selecione um produto primeiro"); return; }
-    const moodLabel = moods.find(m => m.value === config.mood)?.label || "animado";
-    const speech = `Gente, vocês PRECISAM conhecer isso! ${product.nome} por apenas ${product.precoTexto || `R$ ${product.preco.toFixed(2)}`}! Eu testei e é simplesmente INCRÍVEL. A qualidade surpreende demais pelo preço. Corre que tá voando no TikTok Shop! Link na bio! 🔥`;
-    set("falaAvatar", speech);
-    toast.success("Fala gerada com IA! ✨");
-    fireConfetti();
-  };
-
-  const goToEdit = (part: number) => {
-    setShowResult(false);
-    setCurrentPart(part);
-  };
-
-  // ── If showing result ──
-  if (showResult && generatedPrompt) {
+  if (isGenerating) {
     return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-6 animate-in fade-in zoom-in-95 duration-500">
+        <div className="relative">
+          <Wand2 className="w-16 h-16 text-primary animate-pulse" />
+          <div className="absolute -inset-4 bg-primary/20 rounded-full blur-xl animate-pulse" />
+        </div>
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold">Criando seu vídeo viral...</h2>
+          <p className="text-muted-foreground text-sm">Nossa IA está estruturando o melhor roteiro para este produto</p>
+        </div>
+        <div className="w-full max-w-md space-y-2">
+          <Progress value={genProgress} className="h-2" />
+          <p className="text-xs text-center text-muted-foreground">{Math.round(genProgress)}% concluído</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showResult) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <Sparkles className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Roteiro Finalizado!</h2>
+              <p className="text-muted-foreground">Prompt estruturado para o Google Flow V03</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowResult(false)}>
+              Criar Novo
+            </Button>
+            <Button onClick={handleCopyPrompt} className="bg-primary text-white">
+              <Copy className="mr-2 h-4 w-4" /> Copiar Prompt
+            </Button>
+          </div>
+        </div>
+
+        <Card className="bg-card border-white/5 overflow-hidden">
+          <CardHeader className="border-b border-white/5 bg-white/5">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-lg">Prompt Estruturado</CardTitle>
+                <CardDescription>Estilo: {videoStyles[currentStyleIndex]}</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleShuffle} className="text-primary hover:text-primary/80">
+                <RefreshCw className="mr-2 h-4 w-4" /> Gerar Outra Versão
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="bg-black/40 p-6 font-mono text-sm leading-relaxed max-h-[500px] overflow-y-auto custom-scrollbar">
+              <pre className="whitespace-pre-wrap text-[#25F4EE]">
+                {generatedPrompt}
+              </pre>
+            </div>
+          </CardContent>
+        </Card>
+
+        <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-secondary/20 border-white/5">
+            <CardContent className="p-4 flex flex-col items-center text-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Music className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-xs font-medium">Usa músicas em alta no TikTok</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-secondary/20 border-white/5">
+            <CardContent className="p-4 flex flex-col items-center text-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Zap className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-xs font-medium">Focado em retenção dos 3s iniciais</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-secondary/20 border-white/5">
+            <CardContent className="p-4 flex flex-col items-center text-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Film className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-xs font-medium">Instruções visuais cena a cena</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-secondary/20 border-white/5">
+            <CardContent className="p-4 flex flex-col items-center text-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Target className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-xs font-medium">CTA direta focado em vendas</p>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-[0_0_20px_rgba(254,44,85,0.15)]">
+            <Video className="w-8 h-8 text-primary" />
+          </div>
           <div>
-            <h2 className="text-xl font-bold text-white">Creator Lab — Resultado</h2>
-            <p className="text-sm text-muted-foreground">Prompt V03 gerado com sucesso</p>
+            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">Creator Lab</h2>
+            <p className="text-muted-foreground flex items-center gap-2">
+              <Smartphone className="w-4 h-4" /> Criar vídeos virais otimizados para V03
+            </p>
           </div>
-          <Button variant="outline" className="border-white/10" onClick={() => { setShowResult(false); setCurrentPart(0); setGeneratedPrompt(""); }}>
-            Novo Prompt
-          </Button>
         </div>
 
-        {/* Product + Avatar cards */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {selectedProduct && (
-            <div className="rounded-2xl border border-[hsl(var(--neon-cyan))]/30 bg-card p-4 shadow-[0_0_20px_hsl(var(--neon-cyan)/0.1)]">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-[hsl(var(--neon-cyan))]">Produto Selecionado</p>
-              <div className="flex items-center gap-3">
-                <img src={selectedProduct.imageUrl} alt={selectedProduct.nome} className="h-16 w-16 rounded-xl object-cover" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white line-clamp-2">{selectedProduct.nome}</p>
-                  <p className="text-xs text-muted-foreground">{selectedProduct.precoTexto}</p>
+        <div className="flex items-center gap-2 p-1 bg-secondary/50 rounded-xl border border-white/5">
+          {[1, 2, 3].map((step) => (
+            <div 
+              key={step}
+              className={cn(
+                "w-10 h-2 rounded-full transition-all duration-300",
+                step === currentPart ? "bg-primary w-16" : step < currentPart ? "bg-primary/40" : "bg-muted-foreground/20"
+              )}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-12 gap-8">
+        {/* Left Column - Product & Basic Config */}
+        <div className="lg:col-span-4 space-y-6">
+          <Card className="bg-card/50 border-white/5 overflow-hidden">
+            <CardHeader className="p-4 bg-white/5">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Package className="w-4 h-4 text-primary" /> 1. Escolha o Produto
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              {selectedProduct ? (
+                <div className="flex items-start gap-4 p-3 bg-secondary/50 rounded-xl border border-white/10 group relative">
+                  <img src={selectedProduct.imageUrl} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate">{selectedProduct.nome}</p>
+                    <p className="text-xs text-muted-foreground">{selectedProduct.categoria}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="outline" className="text-[10px] h-5 border-primary/30 text-primary">
+                        {String(selectedProduct.comissao)}% comissão
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setShowProductModal(true)}
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  onClick={() => setShowProductModal(true)}
+                  variant="outline"
+                  className="w-full h-24 border-dashed border-white/10 bg-transparent hover:bg-white/5 flex flex-col gap-2"
+                >
+                  <Package className="w-6 h-6 text-muted-foreground" />
+                  <span className="text-sm font-medium">Selecionar Produto</span>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 border-white/5">
+            <CardHeader className="p-4 bg-white/5">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Target className="w-4 h-4 text-primary" /> 2. Estilo do Vídeo
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <Select value={videoStyles[currentStyleIndex]} onValueChange={(v) => setCurrentStyleIndex(videoStyles.indexOf(v))}>
+                <SelectTrigger className="bg-secondary/50 h-10 border-white/5">
+                  <SelectValue placeholder="Estilo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {videoStyles.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+
+              <div className="space-y-3">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Duração Estimada</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {duracoes.map(d => (
+                    <button
+                      key={d.value}
+                      onClick={() => setConfigValue("duracao", d.value)}
+                      className={cn(
+                        "flex flex-col items-center justify-center p-2 rounded-xl border text-[10px] transition-all",
+                        config.duracao === d.value ? "bg-primary border-primary text-white" : "bg-secondary/40 border-white/5 text-muted-foreground hover:bg-secondary/60"
+                      )}
+                    >
+                      <span className="font-bold">{d.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
-              <Button size="sm" variant="outline" className="mt-3 w-full border-[hsl(var(--neon-cyan))]/30 text-[hsl(var(--neon-cyan))]" onClick={() => handleDownload(selectedProduct.imageUrl, selectedProduct.nome)}>
-                <Download className="mr-2 h-3.5 w-3.5" /> Baixar imagem
-              </Button>
-            </div>
-          )}
-          {selectedAvatar && selectedAvatar.imageUrl && (
-            <div className="rounded-2xl border border-[hsl(var(--neon-pink))]/30 bg-card p-4 shadow-[0_0_20px_hsl(var(--neon-pink)/0.1)]">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-[hsl(var(--neon-pink))]">Avatar do Vídeo</p>
-              <div className="flex items-center gap-3">
-                <img src={selectedAvatar.imageUrl} alt={selectedAvatar.name} className="h-16 w-16 rounded-full object-cover" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-white">{selectedAvatar.name}</p>
-                </div>
-              </div>
-              <Button size="sm" variant="outline" className="mt-3 w-full border-[hsl(var(--neon-pink))]/30 text-[hsl(var(--neon-pink))]" onClick={() => handleDownload(selectedAvatar.imageUrl, selectedAvatar.name)}>
-                <Download className="mr-2 h-3.5 w-3.5" /> Baixar imagem
-              </Button>
-            </div>
-          )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Generated Prompt */}
-        <div className="rounded-2xl border border-white/10 bg-card p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white">📝 Prompt Gerado</h3>
+        {/* Right Column - Deep Config */}
+        <div className="lg:col-span-8 space-y-6">
+          <Tabs value={`part${currentPart}`} className="w-full">
+            <TabsContent value="part1" className="m-0 space-y-6 animate-in fade-in slide-in-from-right-4">
+              <Card className="bg-card/50 border-white/10 overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Camera className="w-5 h-5 text-primary" /> Cenário & Vibe
+                  </CardTitle>
+                  <CardDescription>Onde o vídeo será gravado e qual sentimento ele deve passar</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <Label className="text-sm font-bold">Cenário Sugerido</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {cenarios.map(c => (
+                        <button
+                          key={c.value}
+                          onClick={() => setConfigValue("cenario", c.value)}
+                          className={cn(
+                            "flex items-center gap-3 p-3 rounded-xl border text-sm transition-all",
+                            config.cenario === c.value ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" : "bg-secondary/40 border-white/5 text-muted-foreground hover:bg-secondary/60"
+                          )}
+                        >
+                          <span className="text-xl">{c.icon}</span>
+                          <span className="font-medium text-xs">{c.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {config.cenario === "custom" && (
+                      <Textarea 
+                        placeholder="Descreva o cenário desejado..." 
+                        value={config.cenarioCustom}
+                        onChange={(e) => setConfigValue("cenarioCustom", e.target.value)}
+                        className="bg-secondary/40 border-white/5 resize-none h-20"
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-sm font-bold">Tom / Mood emocional</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {moods.map(m => (
+                        <button
+                          key={m.value}
+                          onClick={() => setConfigValue("mood", m.value)}
+                          className={cn(
+                            "flex items-center gap-3 p-3 rounded-xl border text-sm transition-all",
+                            config.mood === m.value ? "bg-primary border-primary text-white" : "bg-secondary/40 border-white/5 text-muted-foreground hover:bg-secondary/60"
+                          )}
+                        >
+                          <span className="text-xl">{m.icon}</span>
+                          <span className="font-medium text-xs">{m.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="part2" className="m-0 space-y-6 animate-in fade-in slide-in-from-right-4">
+              <Card className="bg-card/50 border-white/10 overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <History className="w-5 h-5 text-primary" /> Estilo da Câmera & Avatar
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  <div className="space-y-4">
+                     <Label className="text-sm font-bold">Perspectiva do Vídeo</Label>
+                     <RadioGroup value={config.cameraStyle} onValueChange={(v) => setConfigValue("cameraStyle", v)} className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-2">
+                           <RadioGroupItem value="avatar" id="avatar" />
+                           <Label htmlFor="avatar" className="cursor-pointer">Aparecer Avatar (Influencer)</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                           <RadioGroupItem value="pov" id="pov" />
+                           <Label htmlFor="pov" className="cursor-pointer">POV / Handheld (Mais Autêntico)</Label>
+                        </div>
+                     </RadioGroup>
+                  </div>
+
+                  {config.cameraStyle === "avatar" && (
+                    <div className="space-y-4">
+                      <Label className="text-sm font-bold">Selecione o Criador (Avatar)</Label>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {avatars.map(a => (
+                          <div 
+                            key={a.id}
+                            onClick={() => setConfigValue("selectedAvatarId", a.id)}
+                            className={cn(
+                              "relative cursor-pointer p-4 rounded-2xl border transition-all",
+                              config.selectedAvatarId === a.id ? "bg-primary/10 border-primary" : "bg-secondary/40 border-white/5 grayscale hover:grayscale-0"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">
+                                {String(a.name)[0]}
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold">{a.name}</p>
+                                <p className="text-[10px] text-muted-foreground">{a.desc}</p>
+                              </div>
+                            </div>
+                            {config.selectedAvatarId === a.id && (
+                              <div className="absolute top-2 right-2">
+                                <CheckCircle className="w-4 h-4 text-primary" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                       <Label className="text-sm font-bold">Tipo de Voz</Label>
+                       <Select value={config.tipoVoz} onValueChange={(v) => setConfigValue("tipoVoz", v)}>
+                         <SelectTrigger className="bg-secondary/40 border-white/5">
+                           <SelectValue />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="feminina">Feminina</SelectItem>
+                           <SelectItem value="masculina">Masculina</SelectItem>
+                         </SelectContent>
+                       </Select>
+                    </div>
+                    <div className="space-y-4">
+                       <Label className="text-sm font-bold">Velocidade/Tonalidade</Label>
+                       <Select value={config.tonalidade} onValueChange={(v) => setConfigValue("tonalidade", v)}>
+                         <SelectTrigger className="bg-secondary/40 border-white/5">
+                           <SelectValue />
+                         </SelectTrigger>
+                         <SelectContent>
+                           {tonalidades.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                         </SelectContent>
+                       </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="part3" className="m-0 space-y-6 animate-in fade-in slide-in-from-right-4">
+              <Card className="bg-card/50 border-white/10 overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-primary" /> Instruções Detalhadas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {config.cameraStyle === "avatar" && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-bold">O que o avatar deve falar? (Opcional)</Label>
+                      <Textarea 
+                        placeholder="Ex: No começo do vídeo peça para eles comentarem a cor favorita..." 
+                        value={config.falaAvatar}
+                        onChange={(e) => setConfigValue("falaAvatar", e.target.value)}
+                        className="bg-secondary/40 border-white/5 h-24"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold">Instruções Extras para a IA</Label>
+                    <Textarea 
+                      placeholder="Ex: Focar muito no material do produto / Falar que o frete é grátis..." 
+                      value={config.instrucoes}
+                      onChange={(e) => setConfigValue("instrucoes", e.target.value)}
+                      className="bg-secondary/40 border-white/5 h-24"
+                    />
+                  </div>
+
+                  <div className="bg-primary/10 p-4 rounded-xl border border-primary/20 space-y-2">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Info className="w-4 h-4" />
+                      <p className="text-xs font-bold uppercase">Prompt Otimizado V03</p>
+                    </div>
+                    <p className="text-[10px] text-white/70 leading-relaxed">
+                      Este gerador utiliza uma estrutura de roteirização comprovada do TikTok Shop (Hook, Problem, Solution, CTA). O output é otimizado especificamente para o Google Flow V03.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          <div className="flex items-center justify-between">
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="border-white/10" onClick={() => setPromptExpanded(!promptExpanded)}>
-                {promptExpanded ? "Recolher" : "Ver completo"}
-              </Button>
-              <Button size="sm" variant="outline" className="border-[hsl(var(--neon-cyan))]/30 text-[hsl(var(--neon-cyan))]" onClick={handleCopyPrompt}>
-                <Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar
-              </Button>
-              <Button size="sm" variant="outline" className="border-[hsl(var(--neon-pink))]/30 text-[hsl(var(--neon-pink))]" onClick={handleShuffle}>
-                <Shuffle className="mr-1.5 h-3.5 w-3.5" /> Nova variação
-              </Button>
+              {currentPart > 1 && (
+                <Button variant="ghost" onClick={() => setCurrentPart(s => s - 1)}>
+                  <ChevronLeft className="mr-2 h-4 w-4" /> Anterior
+                </Button>
+              )}
             </div>
-          </div>
-          <div className={cn("rounded-xl bg-secondary/50 p-4 text-sm text-white/80 whitespace-pre-wrap font-mono", promptExpanded ? "" : "max-h-[200px] overflow-hidden relative")}>
-            {generatedPrompt}
-            {!promptExpanded && (
-              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-secondary/90 to-transparent" />
+            
+            {currentPart < 3 ? (
+              <Button onClick={() => setCurrentPart(s => s + 1)} className="bg-white text-black hover:bg-white/90">
+                Próximo <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button 
+                disabled={config.productId === null || isGenerating} 
+                onClick={handleGenerate}
+                className="bg-primary text-white hover:bg-primary/90 px-8 h-12 text-lg shadow-lg shadow-primary/25"
+              >
+                <Rocket className="mr-2 h-5 w-5" /> Gerar Prompt
+              </Button>
             )}
           </div>
         </div>
-
-        {/* Hashtags */}
-        <div className="rounded-2xl border border-white/10 bg-card p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white"># Hashtags Recomendadas</h3>
-            <Button size="sm" variant="outline" className="border-white/10" onClick={handleCopyHashtags}>
-              <Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar todas
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {hashtags.map(h => (
-              <span key={h} className="rounded-full border border-[hsl(var(--neon-pink))]/30 bg-[hsl(var(--neon-pink))]/10 px-3 py-1 text-sm text-[hsl(var(--neon-pink))]">
-                {h}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA - Flow VEO3 */}
-        <div className="rounded-2xl border border-[hsl(var(--neon-cyan))]/30 bg-gradient-to-r from-[hsl(var(--neon-pink))]/10 to-[hsl(var(--neon-cyan))]/10 p-6 text-center">
-          <h3 className="text-lg font-bold text-white mb-2">🎬 Crie o vídeo com IA</h3>
-          <p className="text-sm text-muted-foreground mb-4">Cole o prompt no Google Flow VEO3 para gerar seu vídeo automaticamente</p>
-          <a href="https://labs.google/fx/pt/tools/flow" target="_blank" rel="noopener noreferrer">
-            <Button className="bg-gradient-to-r from-[hsl(var(--neon-pink))] to-[hsl(var(--neon-cyan))] text-white font-semibold px-8">
-              <ExternalLink className="mr-2 h-4 w-4" /> Abrir Flow VEO3
-            </Button>
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  // ── If generating ──
-  if (isGenerating) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center animate-fade-in">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-8 text-center">
-          <div className="mb-6">
-            <Sparkles className="mx-auto h-12 w-12 text-[hsl(var(--neon-pink))] animate-pulse" />
-          </div>
-          <h3 className="text-lg font-bold text-white mb-1">Otimizando prompt…</h3>
-          <p className="text-sm text-muted-foreground mb-6">Gerando prompt otimizado para V03</p>
-          <div className="relative mb-3">
-            <Progress value={genProgress} className="h-3 bg-secondary [&>div]:bg-gradient-to-r [&>div]:from-[hsl(var(--neon-pink))] [&>div]:to-[hsl(var(--neon-cyan))]" />
-          </div>
-          <p className="text-2xl font-bold text-white">{Math.round(genProgress)}%</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Wizard ──
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h2 className="text-xl font-bold text-white">Creator Lab</h2>
-        <p className="text-sm text-muted-foreground">Wizard de criação de prompt para vídeo viral V03</p>
       </div>
 
-      {/* Stepper */}
-      <div className="flex items-center justify-center gap-2">
-        {parts.map((part, idx) => (
-          <div key={part} className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPart(idx)}
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all",
-                idx === currentPart
-                  ? "bg-gradient-to-r from-[hsl(var(--neon-pink))] to-[hsl(var(--neon-cyan))] text-white shadow-[0_0_12px_hsl(var(--neon-pink)/0.4)]"
-                  : idx < currentPart
-                  ? "bg-[hsl(var(--neon-pink))]/20 text-[hsl(var(--neon-pink))]"
-                  : "bg-secondary text-muted-foreground"
-              )}
-            >
-              {idx < currentPart ? <Check className="h-4 w-4" /> : idx + 1}
-            </button>
-            <span className={cn("hidden text-sm sm:block", idx === currentPart ? "text-white font-medium" : "text-muted-foreground")}>
-              {part}
-            </span>
-            {idx < parts.length - 1 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-          </div>
-        ))}
-      </div>
-
-      {/* ═══════ PART 1: SELEÇÃO ═══════ */}
-      {currentPart === 0 && (
-        <div className="space-y-6">
-          {/* Q1: Product */}
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Selecione um produto" subtitle="Escolha do catálogo ou dos seus favoritos">
-              {/* Favorites */}
-              {favoriteProducts.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium uppercase tracking-wider text-[hsl(var(--neon-pink))]">⭐ Meus Favoritos</p>
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                    {favoriteProducts.map(p => (
-                      <NeonCard key={p.id} selected={config.productId === p.id} onClick={() => set("productId", p.id)} className="flex-shrink-0 w-[180px]">
-                        <div className="flex items-center gap-2">
-                          <img src={p.imageUrl} alt={p.nome} className="h-12 w-12 rounded-lg object-cover" />
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium text-white line-clamp-2">{p.nome}</p>
-                            <p className="text-[10px] text-muted-foreground">{p.precoTexto}</p>
-                          </div>
-                        </div>
-                      </NeonCard>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Add button */}
-              <Button variant="outline" className="border-dashed border-white/20 text-white hover:bg-white/5" onClick={() => setShowProductModal(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Adicionar produto do catálogo
-              </Button>
-
-              {/* Selected preview */}
-              {selectedProduct && (
-                <div className="rounded-xl border border-[hsl(var(--neon-cyan))]/20 bg-secondary/30 p-4">
-                  <div className="flex items-center gap-4">
-                    <img src={selectedProduct.imageUrl} alt={selectedProduct.nome} className="h-20 w-20 rounded-xl object-cover" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white line-clamp-2">{selectedProduct.nome}</p>
-                      <p className="text-sm text-muted-foreground">{selectedProduct.categoria}</p>
-                      <p className="text-lg font-bold text-white">{selectedProduct.precoTexto}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </NeonSection>
-          </div>
-
-          {/* Q2: Cenário */}
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Cenário do vídeo" subtitle="Onde o vídeo será gravado? (opcional)">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {cenarios.map(c => (
-                  <NeonCard key={c.value} selected={config.cenario === c.value} onClick={() => set("cenario", c.value)}>
-                    <div className="text-center">
-                      <span className="text-2xl">{c.emoji}</span>
-                      <p className="mt-1 text-sm font-medium text-white">{c.label}</p>
-                    </div>
-                  </NeonCard>
-                ))}
-              </div>
-              {config.cenario === "custom" && (
-                <Textarea
-                  placeholder="Descreva o cenário personalizado..."
-                  value={config.cenarioCustom}
-                  onChange={e => set("cenarioCustom", e.target.value)}
-                  className="mt-3 bg-secondary border-white/10"
-                />
-              )}
-            </NeonSection>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════ PART 2: CONFIGURAÇÃO ═══════ */}
-      {currentPart === 1 && (
-        <div className="space-y-6">
-          {/* Q1: Camera style */}
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Estilo de câmera" subtitle="Como o vídeo será filmado?">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <NeonCard selected={config.cameraStyle === "avatar"} onClick={() => set("cameraStyle", "avatar")} className="p-6">
-                  <div className="flex flex-col items-center text-center gap-3">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--neon-pink))]/10">
-                      <User className="h-8 w-8 text-[hsl(var(--neon-pink))]" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">Avatar Visual</p>
-                      <p className="text-xs text-muted-foreground mt-1">O avatar aparece falando e mostrando o produto</p>
-                    </div>
-                  </div>
-                </NeonCard>
-                <NeonCard selected={config.cameraStyle === "pov"} onClick={() => set("cameraStyle", "pov")} className="p-6">
-                  <div className="flex flex-col items-center text-center gap-3">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--neon-cyan))]/10">
-                      <Eye className="h-8 w-8 text-[hsl(var(--neon-cyan))]" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">POV (Ponto de Vista)</p>
-                      <p className="text-xs text-muted-foreground mt-1">Câmera em primeira pessoa, mãos e produto em foco</p>
-                    </div>
-                  </div>
-                </NeonCard>
-              </div>
-            </NeonSection>
-          </div>
-
-          {/* Q2: Avatars (show always but highlight when Avatar Visual) */}
-          <div className={cn("rounded-2xl border bg-card p-5 transition-all", config.cameraStyle === "avatar" ? "border-[hsl(var(--neon-pink))]/30" : "border-white/10 opacity-60")}>
-            <NeonSection title="Escolha um avatar" subtitle={config.cameraStyle !== "avatar" ? "Disponível apenas com Avatar Visual" : "Selecione quem vai apresentar o produto"}>
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {/* None option */}
-                <NeonCard selected={config.avatarId === 0} onClick={() => { if (config.cameraStyle === "avatar") { set("avatarId", 0); set("customAvatarUrl", ""); } }} className="flex-shrink-0 w-[100px]">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary">
-                      <span className="text-xl text-muted-foreground">✕</span>
-                    </div>
-                    <p className="text-xs font-medium text-white">Nenhum</p>
-                  </div>
-                </NeonCard>
-
-                {defaultAvatars.map(avatar => (
-                  <NeonCard key={avatar.id} selected={config.avatarId === avatar.id} onClick={() => { if (config.cameraStyle === "avatar") { set("avatarId", avatar.id); set("customAvatarUrl", ""); } }} className="flex-shrink-0 w-[100px]">
-                    <div className="flex flex-col items-center gap-2">
-                      <img src={avatar.imageUrl} alt={avatar.name} className="h-14 w-14 rounded-full object-cover" />
-                      <p className="text-xs font-medium text-white">{avatar.name}</p>
-                    </div>
-                  </NeonCard>
-                ))}
-
-                {/* Gallery upload */}
-                <NeonCard selected={config.avatarId === -1} onClick={() => { if (config.cameraStyle === "avatar") handlePickGalleryAvatar(); }} className="flex-shrink-0 w-[100px]">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary overflow-hidden">
-                      {config.customAvatarUrl ? (
-                        <img src={config.customAvatarUrl} alt="Custom" className="h-full w-full object-cover" />
-                      ) : (
-                        <Plus className="h-6 w-6 text-muted-foreground" />
-                      )}
-                    </div>
-                    <p className="text-xs font-medium text-white">Galeria</p>
-                  </div>
-                </NeonCard>
-              </div>
-              {selectedAvatar && config.avatarId !== 0 && config.avatarId !== null && (
-                <p className="text-sm text-[hsl(var(--neon-pink))]">Avatar: {selectedAvatar.name}</p>
-              )}
-            </NeonSection>
-          </div>
-
-          {/* Q3: Instructions */}
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Instruções do vídeo" subtitle="Orientações extras para a IA (opcional)">
-              <div className="relative">
-                <Textarea
-                  placeholder="A IA decide automaticamente se deixado em branco…"
-                  value={config.instrucoes}
-                  onChange={e => set("instrucoes", e.target.value)}
-                  className="bg-secondary border-white/10 min-h-[100px] pr-12"
-                />
-                <button
-                  className="absolute right-3 top-3 rounded-full bg-[hsl(var(--neon-pink))]/20 p-2 text-[hsl(var(--neon-pink))] hover:bg-[hsl(var(--neon-pink))]/30 transition-colors"
-                  title="Ditar instruções"
-                >
-                  <Mic className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="rounded-xl bg-secondary/30 p-3">
-                <p className="text-xs font-medium text-muted-foreground mb-1">💡 Exemplos:</p>
-                <ul className="space-y-1 text-xs text-muted-foreground">
-                  <li>• "Focar nos benefícios de saúde"</li>
-                  <li>• "Usar comparação com concorrente"</li>
-                  <li>• "Incluir depoimento no meio"</li>
-                  <li>• "Começar com pergunta polêmica"</li>
-                </ul>
-              </div>
-            </NeonSection>
-          </div>
-
-          {/* Q4: Duration */}
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Escolha a duração do vídeo" subtitle="Quantos takes o vídeo terá?">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                {duracoes.map(d => (
-                  <NeonCard key={d.value} selected={config.duracao === d.value} onClick={() => set("duracao", d.value)}>
-                    <div className="text-center">
-                      <p className="text-sm font-semibold text-white">{d.label}</p>
-                      <p className="text-xs text-muted-foreground">{d.sub}</p>
-                    </div>
-                  </NeonCard>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">⏱️ Vídeos de 15-30s têm maior taxa de conclusão no TikTok</p>
-            </NeonSection>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════ PART 3: FALA ═══════ */}
-      {currentPart === 2 && (
-        <div className="space-y-6">
-          {/* Q1: Mood */}
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Escolha o tom/mood da fala" subtitle="Qual energia o vídeo deve transmitir?">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {moods.map(m => (
-                  <NeonCard key={m.value} selected={config.mood === m.value} onClick={() => set("mood", m.value)}>
-                    <div className="text-center space-y-1">
-                      <span className="text-2xl">{m.emoji}</span>
-                      <p className="text-sm font-semibold text-white">{m.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{m.desc}</p>
-                    </div>
-                  </NeonCard>
-                ))}
-              </div>
-            </NeonSection>
-          </div>
-
-          {/* Q2: Voice type */}
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Tipo de voz" subtitle="Qual voz será usada na narração?">
-              <div className="grid grid-cols-2 gap-4">
-                <NeonCard selected={config.tipoVoz === "feminina"} onClick={() => set("tipoVoz", "feminina")} className="p-6">
-                  <div className="text-center">
-                    <p className="text-3xl mb-2">👩</p>
-                    <p className="font-semibold text-white">Feminina</p>
-                  </div>
-                </NeonCard>
-                <NeonCard selected={config.tipoVoz === "masculina"} onClick={() => set("tipoVoz", "masculina")} className="p-6">
-                  <div className="text-center">
-                    <p className="text-3xl mb-2">👨</p>
-                    <p className="font-semibold text-white">Masculina</p>
-                  </div>
-                </NeonCard>
-              </div>
-            </NeonSection>
-          </div>
-
-          {/* Q3: Tonality */}
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Tonalidade da voz" subtitle="Escolha o timbre e estilo de fala">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {tonalidades.map(t => (
-                  <NeonCard key={t.value} selected={config.tonalidade === t.value} onClick={() => set("tonalidade", t.value)}>
-                    <p className="text-center text-sm font-semibold text-white">{t.label}</p>
-                  </NeonCard>
-                ))}
-              </div>
-            </NeonSection>
-          </div>
-
-          {/* Q4: Avatar speech */}
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Fala do avatar" subtitle="O que o avatar/narrador vai dizer? (opcional)">
-              <div className="relative">
-                <Textarea
-                  placeholder="A IA decide automaticamente se deixado em branco…"
-                  value={config.falaAvatar}
-                  onChange={e => set("falaAvatar", e.target.value)}
-                  className="bg-secondary border-white/10 min-h-[120px]"
-                />
-              </div>
-              <Button variant="outline" className="border-[hsl(var(--neon-cyan))]/30 text-[hsl(var(--neon-cyan))]" onClick={handleGenerateAISpeech}>
-                <Sparkles className="mr-2 h-4 w-4" /> Gerar com IA
-              </Button>
-            </NeonSection>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════ PART 4: REVISÃO ═══════ */}
-      {currentPart === 3 && (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
-            <NeonSection title="Revisão" subtitle="Confira tudo antes de gerar o prompt V03">
-              <div className="space-y-3">
-                {[
-                  { label: "Produto", value: selectedProduct?.nome || "Não selecionado", part: 0 },
-                  { label: "Cenário", value: config.cenario === "custom" ? config.cenarioCustom : (cenarios.find(c => c.value === config.cenario)?.label || "Não definido"), part: 0 },
-                  { label: "Estilo de Câmera", value: config.cameraStyle === "avatar" ? "Avatar Visual" : config.cameraStyle === "pov" ? "POV" : "Não definido", part: 1 },
-                  { label: "Avatar", value: selectedAvatar && config.avatarId !== 0 ? selectedAvatar.name : "Nenhum", part: 1 },
-                  { label: "Instruções", value: config.instrucoes || "IA decide automaticamente", part: 1 },
-                  { label: "Duração", value: duracoes.find(d => d.value === config.duracao)?.label || "Não definida", part: 1 },
-                  { label: "Tom/Mood", value: moods.find(m => m.value === config.mood)?.label || "Não definido", part: 2 },
-                  { label: "Tipo de Voz", value: config.tipoVoz === "feminina" ? "Feminina" : config.tipoVoz === "masculina" ? "Masculina" : "Não definido", part: 2 },
-                  { label: "Tonalidade", value: tonalidades.find(t => t.value === config.tonalidade)?.label || "Não definida", part: 2 },
-                  { label: "Fala do Avatar", value: config.falaAvatar ? config.falaAvatar.slice(0, 60) + (config.falaAvatar.length > 60 ? "..." : "") : "IA decide automaticamente", part: 2 },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-xl border border-white/5 bg-secondary/30 p-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">{item.label}</p>
-                      <p className="text-sm text-white line-clamp-1">{item.value}</p>
-                    </div>
-                    <Button size="sm" variant="ghost" className="text-[hsl(var(--neon-cyan))] hover:text-[hsl(var(--neon-cyan))]" onClick={() => goToEdit(item.part)}>
-                      Editar
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </NeonSection>
-          </div>
-
-          <Button
-            onClick={handleGenerate}
-            disabled={!config.productId}
-            className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[hsl(var(--neon-pink))] to-[hsl(var(--neon-cyan))] text-white hover:opacity-90 shadow-[0_0_20px_hsl(var(--neon-pink)/0.3)] transition-all"
-          >
-            <Sparkles className="mr-2 h-5 w-5" /> Gerar Prompt V03
-          </Button>
-        </div>
-      )}
-
-      {/* Navigation */}
-      <div className="flex items-center justify-between pt-2">
-        <Button
-          variant="outline"
-          className="border-white/10"
-          onClick={() => setCurrentPart(Math.max(0, currentPart - 1))}
-          disabled={currentPart === 0}
-        >
-          <ChevronLeft className="mr-1 h-4 w-4" /> Anterior
-        </Button>
-        {currentPart < 3 && (
-          <Button
-            onClick={() => setCurrentPart(currentPart + 1)}
-            className="bg-primary text-white"
-          >
-            Próximo <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      {/* Product Selector Modal */}
-      <ProductSelectorModal
-        open={showProductModal}
-        onClose={() => setShowProductModal(false)}
-        onSelect={(p) => set("productId", p.id)}
-        products={products}
+      <ProductSelectorModal 
+        open={showProductModal} 
+        onOpenChange={setShowProductModal}
+        onSelect={(p: Product) => { setConfigValue("productId", p.id); setShowProductModal(false); }}
       />
     </div>
   );
