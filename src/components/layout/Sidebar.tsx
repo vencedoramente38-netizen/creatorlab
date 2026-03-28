@@ -46,27 +46,27 @@ export function Sidebar({ isOpen, onOpenChange, isCollapsed, onCollapsedChange }
 
   const sidebarContent = (collapsed: boolean) => (
     <aside className={cn(
-      "sticky top-0 flex h-screen z-40 shrink-0 flex-col bg-background text-white transition-all duration-300",
+      "relative sticky top-0 flex h-screen z-40 shrink-0 flex-col bg-background text-white transition-all duration-300",
       collapsed ? "w-16" : "w-60"
     )}>
       {/* Circular collapse toggle - desktop only */}
       <button
         onClick={() => onCollapsedChange(!collapsed)}
-        className="absolute -right-3 top-6 z-20 hidden md:flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white shadow-lg border-2 border-background hover:bg-primary/90 transition-colors"
+        className="absolute -right-3 top-1/2 -translate-y-1/2 z-50 hidden md:flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white shadow-lg border-2 border-background hover:bg-primary/90 transition-colors"
       >
         {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
       </button>
 
       <div className={cn(
-        "flex items-center border-b border-white/10",
-        collapsed ? "justify-center px-2 py-5" : "gap-3 px-4 py-5"
+        "flex items-center border-b border-white/5 h-14",
+        collapsed ? "justify-center px-2" : "gap-3 px-4"
       )}>
         <img
           src="https://i.postimg.cc/FHmp3GT8/Gemini-Generated-Image-ib23j0ib23j0ib23.png"
-          alt="Crator Lab"
+          alt="Creator Lab"
           className="h-8 w-8 rounded-lg object-cover"
         />
-        {!collapsed && <span className="text-sm font-semibold">Crator Lab</span>}
+        {!collapsed && <span className="text-sm font-semibold">Creator Lab</span>}
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">

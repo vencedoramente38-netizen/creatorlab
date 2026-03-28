@@ -14,13 +14,21 @@ interface ProductSelectorModalProps {
 }
 
 export function ProductSelectorModal({ open, onOpenChange, onSelect }: ProductSelectorModalProps) {
+  const { products, isFavorite } = useProducts();
   const [search, setSearch] = useState("");
-  const { products } = useProducts();
 
-  const filtered = products.filter(p =>
-    p.nome.toLowerCase().includes(search.toLowerCase()) ||
-    p.categoria.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = products
+    .filter(p =>
+      p.nome.toLowerCase().includes(search.toLowerCase()) ||
+      p.categoria.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      const aFav = isFavorite(a.id);
+      const bFav = isFavorite(b.id);
+      if (aFav && !bFav) return -1;
+      if (!aFav && bFav) return 1;
+      return 0;
+    });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
