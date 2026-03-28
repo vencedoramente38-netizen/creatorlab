@@ -47,6 +47,7 @@ import {
   Feather,
   Smile,
   Volume2,
+  Music,
   Music2,
   Shield
 } from "lucide-react";
