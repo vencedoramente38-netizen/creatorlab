@@ -1,3 +1,4 @@
+import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -71,26 +72,33 @@ export function Sidebar({ isOpen, onOpenChange, isCollapsed, onCollapsedChange }
 
       <nav className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1 px-2">
-          {menuItems.map((item) => {
+          {menuItems.map((item, index) => {
             const isActive = location.pathname === item.path;
+            const hasSeparator = [1, 4, 5, 8].includes(index); // Separators after Radar, Análise, Academy, Meus Prompts
+            
             return (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  onClick={() => onOpenChange(false)}
-                  className={cn(
-                    "flex items-center rounded-lg text-sm font-medium transition-colors",
-                    collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-                    isActive
-                      ? "bg-card border-l-4 border-primary text-white"
-                      : "text-white/60 hover:bg-white/5 hover:text-white"
-                  )}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <item.icon className="h-5 w-5 text-primary" />
-                  {!collapsed && item.label}
-                </NavLink>
-              </li>
+              <React.Fragment key={item.path}>
+                <li>
+                  <NavLink
+                    to={item.path}
+                    onClick={() => onOpenChange(false)}
+                    className={cn(
+                      "flex items-center rounded-lg text-sm font-medium transition-colors",
+                      collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
+                      isActive
+                        ? "bg-card border-l-4 border-primary text-white"
+                        : "text-white/60 hover:bg-white/5 hover:text-white"
+                    )}
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <item.icon className="h-5 w-5 text-primary" />
+                    {!collapsed && item.label}
+                  </NavLink>
+                </li>
+                {hasSeparator && (
+                  <li className="my-2 border-b border-zinc-800 mx-2 list-none" />
+                )}
+              </React.Fragment>
             );
           })}
         </ul>

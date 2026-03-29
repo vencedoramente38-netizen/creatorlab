@@ -32,8 +32,8 @@ export default function Academy() {
     <div className="space-y-10 animate-fade-in pb-20">
       {/* Header */}
       <div className="text-center space-y-4">
-        <div className="inline-flex items-center justify-center p-4 rounded-full bg-[#F59E0B]/10 border border-[#F59E0B]/20 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
-          <GraduationCap className="w-12 h-12 text-[#F59E0B]" />
+        <div className="inline-flex items-center justify-center p-4 rounded-full bg-[#FE2C55]/10 border border-[#FE2C55]/20 shadow-[0_0_30px_rgba(254,44,85,0.2)]">
+          <GraduationCap className="w-12 h-12 text-[#FE2C55]" />
         </div>
         <div>
           <h1 className="text-4xl font-bold text-white tracking-tight">Academy</h1>
@@ -45,14 +45,14 @@ export default function Academy() {
 
       {/* Main Card - VIP Community */}
       <div className="max-w-4xl mx-auto">
-        <Card className="relative overflow-hidden bg-card border-[#F59E0B]/20 shadow-[0_0_50px_rgba(245,158,11,0.1)] group">
+        <Card className="relative overflow-hidden bg-card border-[#FE2C55]/20 shadow-[0_0_50px_rgba(254,44,85,0.1)] group">
           <div className="absolute top-0 right-0 p-4">
-            <Badge className="bg-[#F59E0B] text-black font-bold animate-pulse border-2 border-[#F59E0B]/50 px-3 py-1">
+            <Badge className="bg-[#FE2C55] text-black font-bold animate-pulse border-2 border-[#FE2C55]/50 px-3 py-1">
               EXCLUSIVO
             </Badge>
           </div>
           <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8">
-            <div className="bg-[#F59E0B] p-6 rounded-3xl shadow-[0_0_20px_rgba(245,158,11,0.4)]">
+            <div className="bg-[#FE2C55] p-6 rounded-3xl shadow-[0_0_20px_rgba(254,44,85,0.4)]">
               <Users className="w-16 h-16 text-black" />
             </div>
             <div className="flex-1 text-center md:text-left space-y-4">
@@ -62,27 +62,27 @@ export default function Academy() {
               </p>
               <Button 
                 onClick={() => window.open(ACADEMY_GROUP_URL, "_blank")}
-                className="w-full md:w-auto h-14 px-10 text-lg font-bold bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-black hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transition-all flex items-center gap-3 rounded-xl"
+                className="w-full md:w-auto h-14 px-10 text-lg font-bold bg-gradient-to-r from-[#FE2C55] to-[#E92045] text-black hover:shadow-[0_0_30px_rgba(254,44,85,0.5)] transition-all flex items-center gap-3 rounded-xl"
               >
                 Entrar no Grupo Academy <ExternalLink className="w-6 h-6" />
               </Button>
             </div>
           </CardContent>
-          <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#F59E0B]/50 to-transparent" />
+          <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FE2C55]/50 to-transparent" />
         </Card>
       </div>
 
       {/* Benefits Grid */}
       <div className="max-w-6xl mx-auto space-y-6">
         <h3 className="text-xl font-bold text-white flex items-center gap-2 px-2">
-          <TrendingUp className="w-5 h-5 text-[#F59E0B]" /> Por que fazer parte?
+          <TrendingUp className="w-5 h-5 text-[#FE2C55]" /> Por que fazer parte?
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {BENEFITS.map((b, idx) => (
-            <Card key={idx} className="bg-secondary/20 border-white/10 hover:border-[#F59E0B]/50 transition-colors group">
+            <Card key={idx} className="bg-secondary/20 border-white/10 hover:border-[#FE2C55]/50 transition-colors group">
               <CardContent className="p-6 flex items-start gap-4">
-                <div className="bg-[#F59E0B]/10 p-3 rounded-xl group-hover:bg-[#F59E0B]/20 transition-all">
-                  <b.icon className="w-6 h-6 text-[#F59E0B]" />
+                <div className="bg-[#FE2C55]/10 p-3 rounded-xl group-hover:bg-[#FE2C55]/20 transition-all">
+                  <b.icon className="w-6 h-6 text-[#FE2C55]" />
                 </div>
                 <div className="space-y-1">
                   <h4 className="font-bold text-white">{b.title}</h4>
@@ -113,7 +113,7 @@ export default function Academy() {
                   <span>75%</span>
                 </div>
                 <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                   <div className="h-full bg-gradient-to-r from-[#F59E0B] to-transparent w-[75%] animate-pulse" />
+                   <div className="h-full bg-gradient-to-r from-[#FE2C55] to-transparent w-[75%] animate-pulse" />
                 </div>
               </div>
             </div>

@@ -68,6 +68,15 @@ import { Product } from "@/data/products";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+const PREMIUM_AVATARS = [
+  { id: "av1", nome: "Sofia Tech", tag: "Casual/Tech", imagem: "/avatar_premium_1_1774735732406.png" },
+  { id: "av2", nome: "Lucas Modern", tag: "Streetwear", imagem: "/avatar_premium_2_1774735757110.png" },
+  { id: "av3", nome: "Cyber Neon", tag: "Futurista", imagem: "/avatar_premium_3_1774735777288.png" },
+  { id: "av4", nome: "Clara Studio", tag: "Minimalista", imagem: "/avatar_premium_4_1774735791450.png" },
+  { id: "av5", nome: "Marina Urban", tag: "Casual/Urban", imagem: "/avatar_premium_5_1774735902950.png" },
+  { id: "av6", nome: "Rafael Fit", tag: "Fitness/Sport", imagem: "/avatar_premium_6_1774735918019.png" }
+];
+
 // --- Data Types & Constants ---
 
 interface CreatorConfig {
@@ -287,7 +296,7 @@ export default function CreateVideoPage() {
                 )}
               >
                 <div className="aspect-square rounded-[24px] overflow-hidden mb-4 relative">
-                  <img src={p.imageUrl} alt={p.nome} className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" />
+                  <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" />
                   {config.product?.id === p.id && (
                     <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                        <CheckCircle2 className="h-10 w-10 text-white fill-primary" />
@@ -357,6 +366,36 @@ export default function CreateVideoPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-6">
+         <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Influencer / Avatar</h3>
+         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {PREMIUM_AVATARS.map(av => (
+              <div 
+                key={av.id}
+                onClick={() => updateConfig({ selectedInfluencer: av.id })}
+                className={cn(
+                  "relative rounded-3xl border-2 overflow-hidden cursor-pointer transition-all",
+                  config.selectedInfluencer === av.id ? "border-primary shadow-xl shadow-primary/20 scale-[1.05]" : "border-white/5 hover:border-white/10"
+                )}
+              >
+                <div className="aspect-[4/5] relative">
+                  <img src={av.imagem} alt={av.nome} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <p className="text-[8px] font-black text-white uppercase truncate">{av.nome}</p>
+                    <p className="text-[6px] text-primary font-bold uppercase">{av.tag}</p>
+                  </div>
+                  {config.selectedInfluencer === av.id && (
+                     <div className="absolute top-2 right-2">
+                        <CheckCircle2 className="h-4 w-4 text-white fill-primary" />
+                     </div>
+                  )}
+                </div>
+              </div>
+            ))}
+         </div>
       </section>
 
       <section className="space-y-6">
@@ -582,7 +621,7 @@ export default function CreateVideoPage() {
                  </div>
                  <div>
                     <h4 className="text-xl font-black text-white italic uppercase tracking-tighter">Crystal Power Ativado</h4>
-                    <p className="text-xs text-white/60 font-medium">Ajustes finais de renderização configurados.</p>
+                    <p className="text-xs text-white/60 font-medium">Avatar {PREMIUM_AVATARS.find(a => a.id === config.selectedInfluencer)?.nome || "Sofia"} Selecionado.</p>
                  </div>
               </div>
               <p className="text-xs text-white/40 leading-relaxed italic border-l-2 border-primary/30 pl-4">
@@ -595,12 +634,15 @@ export default function CreateVideoPage() {
           <div className="relative aspect-[9/16] rounded-[56px] overflow-hidden border-4 border-white/5 bg-black group max-h-[580px] mx-auto shadow-2xl">
              {config.product && (
                <img 
-                src={config.product.imageUrl} 
+                src={config.product.imagem} 
                 className="absolute inset-0 w-full h-full object-cover opacity-20 grayscale blur-md scale-110"
-                alt="" 
+                alt={config.product.nome} 
                />
              )}
-             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20" />
+             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+             <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-white/60">R$ {config.product?.valorMin.toFixed(2)}</span>
+             </div>
              <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center space-y-6">
                 <div className="relative">
                   <div className="h-24 w-24 rounded-full border-2 border-primary/40 flex items-center justify-center">

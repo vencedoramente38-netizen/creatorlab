@@ -4,7 +4,7 @@ export interface SavedPrompt {
   id: number;
   title: string;
   content: string;
-  origin: "Criar Video" | "Criar Perfil" | "Creator Lab" | "Viral Creator" | "Outro";
+  origin: "Criar Video" | "Criar Perfil" | "Creator Lab" | "Viral Creator" | "Criar Avatar" | "Outro";
   createdAt: Date;
 }
 
